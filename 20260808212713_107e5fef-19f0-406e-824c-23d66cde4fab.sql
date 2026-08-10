@@ -1,0 +1,2 @@
+ALTER TABLE public.gifts DROP CONSTRAINT IF EXISTS gifts_gift_type_check;
+ALTER TABLE public.gifts ADD CONSTRAINT gifts_gift_type_check CHECK (gift_type = ANY (ARRAY['rose','heart','star','crown','diamond','lion','custom']));
