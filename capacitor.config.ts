@@ -1,13 +1,9 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-/**
- * إعداد Capacitor لتغليف تطبيق "وَصْل" ورفعه على Google Play و App Store.
- * التطبيق يعمل بتقنية SSR، لذلك يُحمّل الموقع المنشور داخل التطبيق الأصلي.
- */
 const config: CapacitorConfig = {
   appId: "app.lovable.arabsparkai",
-  appName: "وَصْل",
-  webDir: "dist",
+  appName: "وصل",
+  webDir: ".output/public",
   server: {
     url: "https://arab-spark-ai.lovable.app",
     cleartext: false,
@@ -33,3 +29,4 @@ const config: CapacitorConfig = {
 };
 
 export default config;
+
