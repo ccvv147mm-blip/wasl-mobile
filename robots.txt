@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /diagnostics
+
+Sitemap: https://arab-spark-ai.lovable.app/sitemap.xml
