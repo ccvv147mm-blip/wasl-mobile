@@ -1,4 +1,4 @@
-name: Build Android App
+name: Build Android App Bundle
 
 on:
   push:
@@ -21,9 +21,11 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Web App & Sync Capacitor
+      - name: Build Web App
+        run: npm run build
+
+      - name: Setup Capacitor Android
         run: |
-          npm run build
           npx cap add android || true
           npx cap sync android
 
@@ -33,15 +35,15 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Compile APK
+      - name: Build Android App Bundle (AAB)
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew bundleRelease
 
-      - name: Upload APK Artifact
+      - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: app-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
           
