@@ -1,4 +1,4 @@
-name: Build Android Bundle
+name: Build Signed Android Bundle
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
           npm install
           npm run build
 
-      - name: Add Android Platform & Build AAB
+      - name: Add Android Platform & Sign AAB
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -39,8 +39,33 @@ jobs:
           npx cap sync android
           if [ -d "android" ]; then
             cd android
+            # فك تشفير المفتاح في مجلد app
+            echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
+            
+            # حقن إعدادات التوقيع في ملف build.gradle تلقائياً
+            BUILD_GRADLE="app/build.gradle"
+            if grep -q "signingConfigs" "$BUILD_GRADLE"; then
+              echo "Signing config already exists"
+            else
+              sed -i '/ buildTypes { про /i \
+    signingConfigs {\
+        release {\
+            storeFile file("keystore.jks")\
+            storePassword "mypassword"\
+            keyAlias "myalias"\
+            keyPassword "mypassword"\
+        }\
+    }' "$BUILD_GRADLE"
+              
+              # استبدال القيم الحقيقية من الأسرار
+              sed -i "s/storePassword \"mypassword\"/storePassword \"$STORE_PASSWORD\"/g" "$BUILD_GRADLE"
+              sed -i "s/keyPassword \"mypassword\"/keyPassword \"$KEY_PASSWORD\"/g" "$BUILD_GRADLE"
+              sed -i "s/keyAlias \"myalias\"/keyAlias \"$KEY_ALIAS\"/g" "$BUILD_GRADLE"
+              sed -i 's/minifyEnabled false/minifyEnabled true/g' "$BUILD_GRADLE" || true
+              sed -i '/ buildTypes {/,+10 s/release {/release {\n\t\t\tsigningConfig signingConfigs.release/g' "$BUILD_GRADLE"
+            fi
+
             chmod +x gradlew
-            echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks || true
             ./gradlew bundleRelease
           fi
 
