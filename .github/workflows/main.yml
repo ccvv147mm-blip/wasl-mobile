@@ -1,45 +1,54 @@
-     - name: Add Android Platform & Sign AAB
-       env:
+    - name: Add Android Platform & Sign AAB
+      env:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }} 
-        run: |
-         npx cap add android || true
-         npx cap sync android
-         if [ -d "android" ]; then
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      run: |
+        npx cap add android || true
+        npx cap sync android
+        if [ -d "android" ]; then
           cd android
           echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
 
-          BUILD_GRADLE="app/build.gradle"
-          if ! grep -q "signingConfigs" "$BUILD_GRADLE"; then
-            # إضافة الـ signingConfigs وكتابة الـ signingConfig مباشرة داخل الـ buildTypes وتحديداً جوه release
-            python3 -c '
-            with open("app/build.gradle", "r") as f:
-                content = f.read()
+          python3 -c '
+          import os
 
-            signing_block = """
-            signingConfigs {
-                release {
-                    storeFile file("keystore.jks")
-                    storePassword "'"$STORE_PASSWORD"'"
-                    keyAlias "'"$KEY_ALIAS"'"
-                    keyPassword "'"$KEY_PASSWORD"'"
-                }
-            }
-            """
+          key_alias = os.environ.get("KEY_ALIAS")
+          key_pass = os.environ.get("KEY_PASSWORD")
+          store_pass = os.environ.get("STORE_PASSWORD")
 
-            # إدراج الـ signingConfigs قبل buildTypes
-            content = content.replace("buildTypes {", signing_block + "\n    buildTypes {")
+          with open("app/build.gradle", "r") as f:
+              lines = f.readlines()
 
-            # ربط الـ release بـ signingConfig
-            content = content.replace("release {", "release {\n            signingConfig signingConfig.release")
+          new_lines = []
+          signing_added = False
+          building_types_found = False
 
-            with open("app/build.gradle", "w") as f:
-                f.write(content)
-            '
-          fi
+          for line in lines:
+              if "buildTypes {" in line and not signing_added:
+                  new_lines.append("    signingConfigs {\n")
+                  new_lines.append("        release {\n")
+                  new_lines.append("            storeFile file(\"keystore.jks\")\n")
+                  new_lines.append(f"            storePassword \"{store_pass}\"\n")
+                  new_lines.append(f"            keyAlias \"{key_alias}\"\n")
+                  new_lines.append(f"            keyPassword \"{key_pass}\"\n")
+                  new_lines.append("        }\n")
+                  new_lines.append("    }\n")
+                  signing_added = True
+
+              if "release {" in line and not building_types_found:
+                  new_lines.append(line)
+                  new_lines.append("            signingConfig signingConfig.release\n")
+                  building_types_found = True
+                  continue
+
+              new_lines.append(line)
+
+          with open("app/build.gradle", "w") as f:
+              f.writelines(new_lines)
+          '
 
           chmod +x gradlew
           ./gradlew bundleRelease
-      fi
+        fi
         
