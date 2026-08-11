@@ -29,29 +29,26 @@ jobs:
           npm install
           npm run build
 
-      - name: Add Android Platform & Build
-        env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      - name: Generate Keystore & Build AAB
         run: |
           npx cap add android || true
           npx cap sync android
           
           if [ -d "android" ]; then
             cd android
-            # فك ضغط ملف التوقيع مباشرة داخل مجلد الأندرويد
-            echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
             
-            # حقن إعدادات التوقيع مباشرة في ملف build.gradle البرمجي أثناء البناء
+            # توليد مفتاح توقيع جديد وصحيح تلقائياً داخل السيرفر
+            keytool -genkey -v -keystore app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
+
+            # حقن إعدادات التوقيع في ملف build.gradle
             echo "" >> app/build.gradle
             echo "android {" >> app/build.gradle
             echo "    signingConfigs {" >> app/build.gradle
             echo "        release {" >> app/build.gradle
             echo "            storeFile file('keystore.jks')" >> app/build.gradle
-            echo "            storePassword '$STORE_PASSWORD'" >> app/build.gradle
-            echo "            keyAlias '$KEY_ALIAS'" >> app/build.gradle
-            echo "            keyPassword '$KEY_PASSWORD'" >> app/build.gradle
+            echo "            storePassword 'Password123'" >> app/build.gradle
+            echo "            keyAlias 'my-key'" >> app/build.gradle
+            echo "            keyPassword 'Password123'" >> app/build.gradle
             echo "        }" >> app/build.gradle
             echo "    }" >> app/build.gradle
             echo "    buildTypes {" >> app/build.gradle
