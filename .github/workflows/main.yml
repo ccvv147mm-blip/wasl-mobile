@@ -9,45 +9,12 @@
         if [ -d "android" ]; then
           cd android
           echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
+          cd ..
+          
+          # تشغيل ملف البايثون الخارجي لتعديل الجريدل بأمان
+          python3 sign_app.py
 
-          python3 -c '
-          import os
-
-          key_alias = os.environ.get("KEY_ALIAS")
-          key_pass = os.environ.get("KEY_PASSWORD")
-          store_pass = os.environ.get("STORE_PASSWORD")
-
-          with open("app/build.gradle", "r") as f:
-              lines = f.readlines()
-
-          new_lines = []
-          signing_added = False
-          building_types_found = False
-
-          for line in lines:
-              if "buildTypes {" in line and not signing_added:
-                  new_lines.append("    signingConfigs {\n")
-                  new_lines.append("        release {\n")
-                  new_lines.append("            storeFile file(\"keystore.jks\")\n")
-                  new_lines.append(f"            storePassword \"{store_pass}\"\n")
-                  new_lines.append(f"            keyAlias \"{key_alias}\"\n")
-                  new_lines.append(f"            keyPassword \"{key_pass}\"\n")
-                  new_lines.append("        }\n")
-                  new_lines.append("    }\n")
-                  signing_added = True
-
-              if "release {" in line and not building_types_found:
-                  new_lines.append(line)
-                  new_lines.append("            signingConfig signingConfig.release\n")
-                  building_types_found = True
-                  continue
-
-              new_lines.append(line)
-
-          with open("app/build.gradle", "w") as f:
-              f.writelines(new_lines)
-          '
-
+          cd android
           chmod +x gradlew
           ./gradlew bundleRelease
         fi
