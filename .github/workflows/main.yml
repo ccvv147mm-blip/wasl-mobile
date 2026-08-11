@@ -1,16 +1,15 @@
-name: Build Signed Android Bundle
+name: Android Build
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -29,42 +28,43 @@ jobs:
           npm install
           npm run build
 
-      - name: Generate Keystore & Build AAB
+      - name: Copy Web Assets to Android
         run: |
-          npx cap add android || true
           npx cap sync android
-          
-          if [ -d "android" ]; then
-            cd android
-            
-            # توليد مفتاح توقيع جديد وصحيح تلقائياً داخل السيرفر
-            keytool -genkey -v -keystore app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
 
-            # حقن إعدادات التوقيع في ملف build.gradle
-            echo "" >> app/build.gradle
-            echo "android {" >> app/build.gradle
-            echo "    signingConfigs {" >> app/build.gradle
-            echo "        release {" >> app/build.gradle
-            echo "            storeFile file('keystore.jks')" >> app/build.gradle
-            echo "            storePassword 'Password123'" >> app/build.gradle
-            echo "            keyAlias 'my-key'" >> app/build.gradle
-            echo "            keyPassword 'Password123'" >> app/build.gradle
-            echo "        }" >> app/build.gradle
-            echo "    }" >> app/build.gradle
-            echo "    buildTypes {" >> app/build.gradle
-            echo "        release {" >> app/build.gradle
-            echo "            signingConfig signingConfigs.release" >> app/build.gradle
-            echo "        }" >> app/build.gradle
-            echo "    }" >> app/build.gradle
-            echo "}" >> app/build.gradle
+      - name: Generate New Keystore and Export PEM Certificate
+        run: |
+          keytool -genkey -v -keystore app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
+          keytool -export -rfc -keystore app/keystore.jks -alias my-key -file upload_certificate.pem -storepass Password123
 
-            chmod +x gradlew
-            ./gradlew bundleRelease
-          fi
+      - name: Configure Signing in build.gradle
+        run: |
+          echo "" >> app/build.gradle
+          echo "android {" >> app/build.gradle
+          echo "    signingConfigs {" >> app/build.gradle
+          echo "        release {" >> app/build.gradle
+          echo "            storeFile file('keystore.jks')" >> app/build.gradle
+          echo "            storePassword 'Password123'" >> app/build.gradle
+          echo "            keyAlias 'my-key'" >> app/build.gradle
+          echo "            keyPassword 'Password123'" >> app/build.gradle
+          echo "        }" >> app/build.gradle
+          echo "    }" >> app/build.gradle
+          echo "    buildTypes {" >> app/build.gradle
+          echo "        release {" >> app/build.gradle
+          echo "            signingConfig signingConfigs.release" >> app/build.gradle
+          echo "        }" >> app/build.gradle
+          echo "    }" >> app/build.gradle
+          echo "}" >> app/build.gradle
 
-      - name: Upload AAB Artifact
+      - name: Build Signed AAB
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+      - name: Upload Artifacts (AAB and PEM Certificate)
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-bundle
-          path: android/app/build/outputs/bundle/release/app-release.aab
-          
+          name: release-outputs
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            upload_certificate.pem
