@@ -25,6 +25,7 @@ jobs:
 
       - name: Build Signed AAB
         run: |
+          cd android
           chmod +x gradlew
           ./gradlew bundleRelease
 
@@ -33,5 +34,5 @@ jobs:
         with:
           name: release-outputs
           path: |
-            app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/bundle/release/app-release.aab
             upload_certificate.pem
