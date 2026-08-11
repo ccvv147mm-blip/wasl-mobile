@@ -20,8 +20,8 @@ jobs:
 
       - name: Generate New Keystore and Export PEM Certificate
         run: |
-          keytool -genkey -v -keystore app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
-          keytool -export -rfc -keystore app/keystore.jks -alias my-key -file upload_certificate.pem -storepass Password123
+          keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
+          keytool -export -rfc -keystore keystore.jks -alias my-key -file upload_certificate.pem -storepass Password123
 
       - name: Build Signed AAB
         run: |
@@ -35,4 +35,3 @@ jobs:
           path: |
             app/build/outputs/bundle/release/app-release.aab
             upload_certificate.pem
-            
