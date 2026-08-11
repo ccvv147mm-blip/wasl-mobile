@@ -1,68 +1,45 @@
-name: Build Signed Android Bundle
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
-    - name: Install Dependencies & Build Web
-      run: |
-        npm install
-        npm run build
-
-    - name: Add Android Platform & Sign AAB
-      env:
+     - name: Add Android Platform & Sign AAB
+       env:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-      run: |
-        npx cap add android || true
-        npx cap sync android
-        if [ -d "android" ]; then
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }} 
+        run: |
+         npx cap add android || true
+         npx cap sync android
+         if [ -d "android" ]; then
           cd android
           echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
 
           BUILD_GRADLE="app/build.gradle"
           if ! grep -q "signingConfigs" "$BUILD_GRADLE"; then
-            sed -i '/ buildTypes {/i \
-            signingConfigs {\
-                release {\
-                    storeFile file("keystore.jks")\
-                    storePassword "'"$STORE_PASSWORD"'"\
-                    keyAlias "'"$KEY_ALIAS"'"\
-                    keyPassword "'"$KEY_PASSWORD"'"\
-                }\
-            }' "$BUILD_GRADLE"
-            sed -i '/ buildTypes {/,/+10 s/release {/release { \
-                signingConfig signingConfig.release/g' "$BUILD_GRADLE"
+            # إضافة الـ signingConfigs وكتابة الـ signingConfig مباشرة داخل الـ buildTypes وتحديداً جوه release
+            python3 -c '
+            with open("app/build.gradle", "r") as f:
+                content = f.read()
+
+            signing_block = """
+            signingConfigs {
+                release {
+                    storeFile file("keystore.jks")
+                    storePassword "'"$STORE_PASSWORD"'"
+                    keyAlias "'"$KEY_ALIAS"'"
+                    keyPassword "'"$KEY_PASSWORD"'"
+                }
+            }
+            """
+
+            # إدراج الـ signingConfigs قبل buildTypes
+            content = content.replace("buildTypes {", signing_block + "\n    buildTypes {")
+
+            # ربط الـ release بـ signingConfig
+            content = content.replace("release {", "release {\n            signingConfig signingConfig.release")
+
+            with open("app/build.gradle", "w") as f:
+                f.write(content)
+            '
           fi
 
           chmod +x gradlew
           ./gradlew bundleRelease
-        fi
-
-    - name: Upload AAB Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release-bundle
-        path: android/app/build/outputs/bundle/release/app-release.aab
+      fi
         
