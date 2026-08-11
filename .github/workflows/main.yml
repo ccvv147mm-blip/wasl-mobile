@@ -10,46 +10,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
-    - name: Install Dependencies & Build Web
-      run: |
-        npm install
-        npm run build
+      - name: Install Dependencies & Build Web
+        run: |
+          npm install
+          npm run build
 
-    - name: Add Android Platform & Sign AAB
-      env:
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-      run: |
-        npx cap add android || true
-        npx cap sync android
-        if [ -d "android" ]; then
-          cd android
-          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
-          cd ..
-          python3 sign_app.py
-          cd android
-          chmod +x gradlew
-          ./gradlew bundleRelease
-        fi
+      - name: Setup Android & Build Signed AAB
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          npx cap add android || true
+          npx cap sync android
+          if [ -d "android" ]; then
+            cd android
+            # فك ضغط ملف التوقيع
+            echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
+            
+            # إنتاج ملف الـ properties الخاص بالتوقيع
+            echo "storePassword=$STORE_PASSWORD" > keystore.properties
+            echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
+            echo "keyAlias=$KEY_ALIAS" >> keystore.properties
+            echo "storeFile=keystore.jks" >> keystore.properties
 
-    - name: Upload AAB Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release-bundle
-        path: android/app/build/outputs/bundle/release/app-release.aab
-        
+            chmod +x gradlew
+            ./gradlew bundleRelease
+          fi
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          
