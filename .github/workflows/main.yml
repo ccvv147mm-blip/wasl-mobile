@@ -29,7 +29,7 @@ jobs:
           npm install
           npm run build
 
-      - name: Setup Android & Build Signed AAB
+      - name: Add Android Platform & Build
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -37,16 +37,29 @@ jobs:
         run: |
           npx cap add android || true
           npx cap sync android
+          
           if [ -d "android" ]; then
             cd android
-            # فك ضغط ملف التوقيع
+            # فك ضغط ملف التوقيع مباشرة داخل مجلد الأندرويد
             echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystore.jks
             
-            # إنتاج ملف الـ properties الخاص بالتوقيع
-            echo "storePassword=$STORE_PASSWORD" > keystore.properties
-            echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
-            echo "keyAlias=$KEY_ALIAS" >> keystore.properties
-            echo "storeFile=keystore.jks" >> keystore.properties
+            # حقن إعدادات التوقيع مباشرة في ملف build.gradle البرمجي أثناء البناء
+            echo "" >> app/build.gradle
+            echo "android {" >> app/build.gradle
+            echo "    signingConfigs {" >> app/build.gradle
+            echo "        release {" >> app/build.gradle
+            echo "            storeFile file('keystore.jks')" >> app/build.gradle
+            echo "            storePassword '$STORE_PASSWORD'" >> app/build.gradle
+            echo "            keyAlias '$KEY_ALIAS'" >> app/build.gradle
+            echo "            keyPassword '$KEY_PASSWORD'" >> app/build.gradle
+            echo "        }" >> app/build.gradle
+            echo "    }" >> app/build.gradle
+            echo "    buildTypes {" >> app/build.gradle
+            echo "        release {" >> app/build.gradle
+            echo "            signingConfig signingConfigs.release" >> app/build.gradle
+            echo "        }" >> app/build.gradle
+            echo "    }" >> app/build.gradle
+            echo "}" >> app/build.gradle
 
             chmod +x gradlew
             ./gradlew bundleRelease
