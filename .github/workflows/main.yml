@@ -33,6 +33,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Copy Keystore to Android App Folder
+        run: |
+          mkdir -p android/app
+          cp keystore.jks android/app/keystore.jks
+
       - name: Configure Signing in build.gradle
         run: |
           echo "" >> android/app/build.gradle
