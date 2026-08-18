@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from "@capacitor/cli";
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: "app.lovable.arabsparkai",
-  appName: "وصل",
-  webDir: ".output/public",
+  appId: 'app.lovable.arabsparkai',
+  appName: 'وَصْلُ',
+  webDir: '.output/public',
   server: {
     url: "https://arab-spark-ai.lovable.app",
     cleartext: false,
@@ -11,6 +11,8 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
+    versionCode: 2,
+    versionName: "1.0.1",
   },
   ios: {
     contentInset: "always",
