@@ -33,11 +33,6 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Generate New Keystore and Export PEM Certificate
-        run: |
-          keytool -genkey -v -keystore android/app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key -storepass Password123 -keypass Password123 -dname "CN=Android, OU=Development, O=App, L=Cairo, ST=Cairo, C=EG"
-          keytool -export -rfc -keystore android/app/keystore.jks -alias my-key -file upload_certificate.pem -storepass Password123
-
       - name: Configure Signing in build.gradle
         run: |
           echo "" >> android/app/build.gradle
@@ -63,12 +58,10 @@ jobs:
           chmod +x gradlew
           ./gradlew bundleRelease
 
-      - name: Upload Artifacts (AAB, PEM, and Keystore)
+      - name: Upload Artifacts (AAB)
         uses: actions/upload-artifact@v4
         with:
           name: release-outputs
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
-            upload_certificate.pem
-            android/app/keystore.jks
             
