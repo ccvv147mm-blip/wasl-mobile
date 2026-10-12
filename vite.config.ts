@@ -11,11 +11,12 @@ export default defineConfig({
       'src': path.resolve(__dirname, './'),
       '/src': path.resolve(__dirname, './'),
       'components': path.resolve(__dirname, './components'),
-      'integrations': path.resolve(__dirname, './integrations'),
+      'integrations': path.resolve(__dirname, './'),
+      '@/integrations/supabase/client': path.resolve(__dirname, './client.ts')
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
   },
   build: {
     outDir: 'dist',
-  },
+  }
 });
