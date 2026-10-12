@@ -42,7 +42,7 @@ function ListingPage() {
     });
     if (error) return toast.error(friendlyError(error, "تعذّر إرسال الرسالة"));
     toast.success("تم إرسال رسالة للبائع");
-    navigate({ to: "/messages", search: {} });
+    navigate({ to: "/messages", search: { to: undefined } });
   };
 
   const buy = async () => {

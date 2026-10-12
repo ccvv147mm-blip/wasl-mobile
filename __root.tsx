@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
@@ -14,6 +15,29 @@ import { Toaster } from "@/components/ui/sonner";
 import { ErrorCatcher } from "@/components/ErrorCatcher";
 import { MediaLock } from "@/components/MediaLock";
 import { I18nProvider } from "@/lib/i18n";
+
+function RemoveLovableBadge() {
+  useEffect(() => {
+    const selectors = [
+      '[data-lovable]',
+      '[class*="lovable"]',
+      '[id*="lovable"]',
+      'iframe[src*="lovable"]',
+      '[aria-label*="Lovable"]',
+      '[title*="Lovable"]',
+    ];
+    const remove = () => {
+      selectors.forEach((sel) => {
+        document.querySelectorAll(sel).forEach((el) => el.remove());
+      });
+    };
+    remove();
+    const obs = new MutationObserver(remove);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+  return null;
+}
 
 function NotFoundComponent() {
   return (
@@ -37,7 +61,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   return (
@@ -65,7 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "وَصْل — شبكة عربية مدعومة بالذكاء الاصطناعي" },
       {
         name: "description",
@@ -88,9 +112,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#1877F2" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "وَصْل" },
       { name: "mobile-web-app-capable", content: "yes" },
+      { name: "google-site-verification", content: "P-yV17Sr4PhPAkEpkEBIp9fWJKdUEVezt1erVTw7ok0" },
     ],
     scripts: [
       {
@@ -133,7 +158,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&display=swap",
       },
     ],
   }),
@@ -163,6 +188,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <AuthProvider>
+          <RemoveLovableBadge />
           <MediaLock />
           <Outlet />
           <ErrorCatcher />

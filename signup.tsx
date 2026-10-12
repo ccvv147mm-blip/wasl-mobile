@@ -34,21 +34,26 @@ function SignupPage() {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) return toast.error("كلمة المرور يجب ألا تقل عن ٦ أحرف");
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone && !/^\+?[0-9\s-]{7,20}$/.test(trimmedPhone))
+      return toast.error("رقم الهاتف غير صحيح");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: { full_name: fullName, phone: trimmedPhone || null },
       },
     });
+
     setLoading(false);
     if (error) return toast.error(friendlyError(error, "تعذّر إنشاء الحساب"));
     toast.success("تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب.");
@@ -59,7 +64,10 @@ function SignupPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("تعذّر التسجيل عبر Google");
+    if (result.error) {
+      console.error("Google sign-up error", result.error);
+      return toast.error(`تعذّر التسجيل عبر Google: ${result.error.message ?? ""}`);
+    }
     if (result.redirected) return;
     navigate({ to: "/feed" });
   };
@@ -97,9 +105,25 @@ function SignupPage() {
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" />
             </div>
             <div>
+              <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                placeholder="+201234567890"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                dir="ltr"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                يبقى رقمك خاصاً ولا يظهر للآخرين.
+              </p>
+            </div>
+            <div>
               <Label htmlFor="password">كلمة المرور</Label>
               <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "..." : "أنشئ حسابي"}
             </Button>

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PostComposer } from "@/components/PostComposer";
 import { NewsPanel } from "@/components/NewsPanel";
+import { StoriesBar } from "@/components/StoriesBar";
 import { PostCard, type FeedPost } from "@/components/PostCard";
-import { Sparkles, Brain, Users, Heart, Loader2, Clock, Store, Video, Coins, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Brain, Users, Heart, Loader2, Clock, Store, Video, ChevronDown, ChevronUp } from "lucide-react";
 import { rankFeed } from "@/lib/ai.functions";
 import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
@@ -85,7 +86,7 @@ function AuthedHome() {
         .from("posts")
         .select(`
           id, content, image_url, video_url, created_at, author_id,
-          author:profiles!posts_author_id_fkey(username, full_name, avatar_url),
+          author:profiles!posts_author_id_fkey(username, full_name, avatar_url, is_verified),
           likes(user_id), comments(id), gifts(id), shares(id)
         `)
         .order("created_at", { ascending: false })
@@ -151,13 +152,20 @@ function AuthedHome() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-6 space-y-4">
-        <NewsPanel />
-        <PostComposer />
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6 space-y-4">
+        <div className="px-4 sm:px-0">
+          <StoriesBar />
+        </div>
+        <div className="px-4 sm:px-0">
+          <NewsPanel />
+        </div>
+        <div className="px-4 sm:px-0">
+          <PostComposer />
+        </div>
 
         {/* Marketplace highlights */}
         {listings.data && listings.data.length > 0 && (
-          <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
+          <section className="mx-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:mx-0">
             <div className="mb-3 flex items-center justify-between">
               <button
                 type="button"
@@ -194,7 +202,7 @@ function AuthedHome() {
 
         {/* Videos highlights */}
         {videos.data && videos.data.length > 0 && (
-          <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
+          <section className="mx-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:mx-0">
             <div className="mb-3 flex items-center justify-between">
               <button
                 type="button"
@@ -222,7 +230,7 @@ function AuthedHome() {
           </section>
         )}
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between px-4 pt-2 sm:px-0">
           <h2 className="text-lg font-bold">الرئيسية</h2>
           <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1 text-xs">
             <Button size="sm" variant={smartOrder ? "ghost" : "secondary"} onClick={() => setSmartOrder(null)} className="h-7 rounded-full">
@@ -234,10 +242,10 @@ function AuthedHome() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div>
           {feed.isLoading && <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
           {feed.data && feed.data.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+            <div className="mx-4 rounded-2xl border border-dashed border-border p-12 text-center sm:mx-0">
               <p className="text-muted-foreground">لا توجد منشورات بعد. كن أول من يشارك!</p>
             </div>
           )}

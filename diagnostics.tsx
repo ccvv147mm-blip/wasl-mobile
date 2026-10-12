@@ -3,7 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Header } from "@/components/Header";
-import { Loader2, ShieldCheck, AlertTriangle, Sparkles } from "lucide-react";
+import { Loader2, ShieldCheck, AlertTriangle, Sparkles, Wrench } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { isSelfHealEnabled, setSelfHealEnabled, runFullRepair } from "@/lib/self-heal";
 
 export const Route = createFileRoute("/diagnostics")({ component: DiagnosticsPage });
 
@@ -19,6 +23,12 @@ type Row = {
 
 function DiagnosticsPage() {
   const { user, loading } = useAuth();
+  const [healOn, setHealOn] = useState(true);
+  const [repairing, setRepairing] = useState(false);
+
+  useEffect(() => {
+    setHealOn(isSelfHealEnabled());
+  }, []);
 
   const q = useQuery({
     enabled: !!user,
@@ -49,6 +59,39 @@ function DiagnosticsPage() {
             <h1 className="text-2xl font-bold">الإصلاح الذاتي</h1>
             <p className="text-sm text-muted-foreground">يلتقط الأخطاء ويقترح حلولاً بالذكاء الاصطناعي.</p>
           </div>
+        </div>
+
+        <div className="mb-5 rounded-2xl border border-border bg-card p-4 shadow-card">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Wrench className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-bold">الإصلاح الذاتي التلقائي</p>
+                <p className="text-xs text-muted-foreground">
+                  {healOn ? "مُشغَّل — يعالج الأعطال الشائعة فوراً دون تدخلك." : "متوقف — لن يتم إصلاح الأعطال تلقائياً."}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={healOn}
+              onCheckedChange={(v) => {
+                setHealOn(v);
+                setSelfHealEnabled(v);
+              }}
+            />
+          </div>
+          <Button
+            variant="outline"
+            className="mt-3 w-full"
+            disabled={repairing}
+            onClick={async () => {
+              setRepairing(true);
+              await runFullRepair();
+            }}
+          >
+            {repairing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wrench className="mr-2 h-4 w-4" />}
+            إصلاح فوري وتحديث التطبيق
+          </Button>
         </div>
 
         {q.isLoading && <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}

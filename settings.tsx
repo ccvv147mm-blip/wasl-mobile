@@ -366,11 +366,16 @@ function DataPanel() {
   const [busy, setBusy] = useState(false);
 
   const download = async () => {
-    const [{ data: profile }, { data: posts }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user!.id).single(),
+    const [{ data: profile }, { data: posts }, { data: phone }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url, cover_url, interests, country, credits, created_at, updated_at")
+        .eq("id", user!.id)
+        .single(),
       supabase.from("posts").select("*").eq("author_id", user!.id),
+      supabase.rpc("get_my_phone"),
     ]);
-    const blob = new Blob([JSON.stringify({ profile, posts }, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ profile: { ...profile, phone }, posts }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "my-data.json"; a.click();
     URL.revokeObjectURL(url);
@@ -423,7 +428,7 @@ function HelpPanel() {
           </details>
         ))}
         <Separator />
-        <Button asChild variant="outline"><Link to="/messages" search={{}}><MessageSquare className="h-4 w-4" /> تواصل مع الدعم</Link></Button>
+        <Button asChild variant="outline"><Link to="/messages" search={{ to: undefined }}><MessageSquare className="h-4 w-4" /> تواصل مع الدعم</Link></Button>
       </div>
     </Card>
   );

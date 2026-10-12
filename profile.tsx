@@ -1,21 +1,26 @@
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Header } from "@/components/Header";
 import { VoiceChat } from "@/components/VoiceChat";
+import { StoriesBar } from "@/components/StoriesBar";
 import { PostComposer } from "@/components/PostComposer";
 import { PostCard, type FeedPost } from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Loader2, Camera, ImagePlus, Coins, Wallet } from "lucide-react";
+import { Loader2, Camera, ImagePlus, Coins, Wallet, Pencil, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { friendlyError } from "@/lib/friendly-error";
 import { assertAllowedUpload } from "@/lib/upload-guard";
+import { listFriends } from "@/lib/friends.functions";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -46,15 +51,31 @@ function ProfilePage() {
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | "cover" | null>(null);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
+  const friendsFn = useServerFn(listFriends);
+
+  useEffect(() => {
+    const f = localStorage.getItem("profile-friends-open");
+    if (f !== null) setFriendsOpen(f === "1");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("profile-friends-open", friendsOpen ? "1" : "0");
+  }, [friendsOpen]);
 
   const profile = useQuery({
     enabled: !!user,
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url, cover_url, interests, country, credits, created_at, updated_at, is_verified")
+        .eq("id", user!.id)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -105,6 +126,15 @@ function ProfilePage() {
     }
   }, [profile.data]);
 
+  const friends = useQuery({
+    enabled: !!user,
+    queryKey: ["profile-friends", user?.id],
+    queryFn: async () => {
+      const { friends: rows } = await friendsFn({ data: undefined as any });
+      return rows ?? [];
+    },
+  });
+
   const save = async () => {
     setSaving(true);
     const { error } = await supabase
@@ -114,6 +144,7 @@ function ProfilePage() {
     setSaving(false);
     if (error) return toast.error(friendlyError(error, "تعذّر حفظ التغييرات"));
     toast.success("تم الحفظ");
+    setEditOpen(false);
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
 
@@ -146,8 +177,8 @@ function ProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-border bg-card shadow-none sm:rounded-2xl sm:border sm:border-border sm:shadow-card">
           {/* Cover */}
           <div className="relative h-32 w-full bg-muted sm:h-44">
             {profile.data?.cover_url ? (
@@ -168,7 +199,7 @@ function ProfilePage() {
           </div>
 
           {/* Avatar + name */}
-          <div className="-mt-10 flex items-end gap-4 px-6">
+          <div className="-mt-10 flex items-end gap-4 px-4 sm:px-6">
             <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-card">
                 {profile.data?.avatar_url && <AvatarImage src={profile.data.avatar_url} />}
@@ -185,18 +216,18 @@ function ProfilePage() {
               </button>
             </div>
             <div className="pb-2">
-              <h1 className="text-2xl font-bold">{name}</h1>
+              <h1 className="flex items-center gap-1.5 text-2xl font-bold">{name}<VerifiedBadge show={(profile.data as any)?.is_verified} className="h-6 w-6" /></h1>
               <p className="text-xs text-muted-foreground">@{profile.data?.username} · خاص بك ولا يظهر للآخرين</p>
             </div>
           </div>
 
           {/* VoiceChat right under the avatar */}
-          <div className="mt-4 px-6">
+          <div className="mt-4 px-4 sm:px-6">
             <VoiceChat />
           </div>
 
           {/* Credits + earnings link */}
-          <div className="mt-4 flex flex-wrap items-center gap-2 px-6 pb-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2 px-4 pb-2 sm:px-6">
             <div className="flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm">
               <Coins className="h-4 w-4 text-amber-500" />
               <span className="font-bold">{profile.data?.credits ?? 0}</span>
@@ -207,37 +238,92 @@ function ProfilePage() {
             </Button>
           </div>
 
-          {/* Form */}
-          <div className="space-y-4 p-6">
-            <div>
-              <Label htmlFor="name">الاسم الكامل</Label>
-              <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="bio">النبذة</Label>
-              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={300} placeholder="عرّف عن نفسك..." />
-            </div>
-            <div>
-              <Label htmlFor="interests">اهتماماتك (تساعد الخلاصة الذكية)</Label>
-              <Textarea id="interests" value={interests} onChange={(e) => setInterests(e.target.value)} rows={2} maxLength={500} placeholder="مثلاً: تقنية، أدب، رياضة..." />
-            </div>
-            <Button onClick={save} disabled={saving} className="shadow-elegant">
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              حفظ التغييرات
-            </Button>
+          {/* Edit trigger — form lives in a side panel */}
+          <div className="p-4 pt-2 sm:p-6 sm:pt-2">
+            <Sheet open={editOpen} onOpenChange={setEditOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Pencil className="h-4 w-4" /> تعديل بياناتي
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[88vw] overflow-y-auto sm:max-w-md">
+                <SheetHeader>
+                  <SheetTitle>تعديل بياناتي</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <Label htmlFor="name">الاسم الكامل</Label>
+                    <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="bio">النبذة</Label>
+                    <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={300} placeholder="عرّف عن نفسك..." />
+                  </div>
+                  <div>
+                    <Label htmlFor="interests">اهتماماتك (تساعد الخلاصة الذكية)</Label>
+                    <Textarea id="interests" value={interests} onChange={(e) => setInterests(e.target.value)} rows={2} maxLength={500} placeholder="مثلاً: تقنية، أدب، رياضة..." />
+                  </div>
+                  <Button onClick={save} disabled={saving} className="w-full shadow-elegant">
+                    {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                    حفظ التغييرات
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
+        {/* Friends list */}
+        {friends.data && friends.data.length > 0 && (
+          <section className="mx-4 mt-4 rounded-2xl border border-border bg-card p-4 shadow-card sm:mx-0">
+            <div className="mb-3 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setFriendsOpen((v) => !v)}
+                className="flex items-center gap-2"
+                aria-expanded={friendsOpen}
+              >
+                <Users className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold">أصدقائي</h2>
+                {friendsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              <Button asChild size="sm" variant="ghost"><Link to="/friends">الكل</Link></Button>
+            </div>
+            {friendsOpen && (
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {friends.data.map((f: any) => (
+                  <Link key={f.id} to="/profile" search={{ userId: f.id }} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
+                    <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-primary/20 bg-muted">
+                      {f.avatar_url ? (
+                        <img src={f.avatar_url} alt={f.username} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+                          {(f.full_name || f.username || "").slice(0, 1)}
+                        </div>
+                      )}
+                    </div>
+                    <p className="w-full truncate text-center text-[11px] font-semibold">{f.full_name || f.username}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        <div className="mt-6 px-4 sm:px-0">
+          <StoriesBar />
+        </div>
+
         {/* Post composer + my posts (mirrors home feed) */}
-        <div className="mt-6">
+        <div className="mt-6 px-4 sm:px-0">
           <PostComposer />
         </div>
         <div className="mt-6">
-          <h2 className="mb-3 text-lg font-bold">منشوراتي</h2>
-          <div className="space-y-4">
+          <h2 className="mb-3 px-4 text-lg font-bold sm:px-0">منشوراتي</h2>
+          <div>
             {myPosts.isLoading && <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}
             {myPosts.data && myPosts.data.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              <div className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground sm:mx-0">
                 لم تنشر شيئاً بعد.
               </div>
             )}

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callLovableAI } from "./ai-gateway.server";
+import { improvePostFreeFallback, rankFeedFreeFallback } from "./free-ai-fallback";
 
 /**
  * يحسّن أو يصيغ منشوراً عربياً باستخدام الذكاء الاصطناعي.
@@ -23,15 +24,20 @@ export const improvePost = createServerFn({ method: "POST" })
       shorten: "اختصر هذا المنشور العربي مع الحفاظ على الفكرة الأساسية. أعد النص فقط.",
       ideas: "اقترح 3 أفكار قصيرة لمنشورات متعلقة بهذا الموضوع. أرجعها كقائمة مرقمة.",
     };
-    const content = await callLovableAI({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: systemByMode[data.mode] },
-        { role: "user", content: data.text },
-      ],
-      temperature: 0.7,
-    });
-    return { result: content.trim() };
+    try {
+      const content = await callLovableAI({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemByMode[data.mode] },
+          { role: "user", content: data.text },
+        ],
+        temperature: 0.7,
+      });
+      return { result: content.trim(), error: null as string | null };
+    } catch (e) {
+      console.error("improvePost error:", e);
+      return { result: improvePostFreeFallback(data.text, data.mode), error: null as string | null };
+    }
   });
 
 /**
@@ -96,6 +102,6 @@ ${postsForAI}
       return { order: orderedIds };
     } catch (e) {
       console.error("rankFeed error:", e);
-      return { order: data.posts.map((p) => p.id) };
+      return { order: rankFeedFreeFallback(data.posts) };
     }
   });

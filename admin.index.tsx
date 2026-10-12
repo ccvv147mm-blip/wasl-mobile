@@ -1,3 +1,4 @@
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,6 +21,7 @@ import {
   Minus,
   Search,
   Banknote,
+  Flag,
   ScrollText,
   Radio,
   Gift,
@@ -32,6 +34,7 @@ import {
   adminStats,
   adminListUsers,
   adminSetRole,
+  adminSetVerified,
   adminAdjustCredits,
   adminDeleteContent,
   adminListContent,
@@ -105,11 +108,23 @@ function AdminPanel() {
               <p className="text-sm text-muted-foreground">تحكم كامل في التطبيق والمستخدمين</p>
             </div>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/admin/recharges">
-              <Banknote className="ml-1 h-4 w-4" /> طلبات الشحن والسحب
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/recharges">
+                <Banknote className="ml-1 h-4 w-4" /> طلبات الشحن
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/withdrawals">
+                <Banknote className="ml-1 h-4 w-4" /> طلبات السحب
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/reports">
+                <Flag className="ml-1 h-4 w-4" /> بلاغات المحتوى
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="overview">
@@ -218,6 +233,15 @@ function UsersTab({ onChanged }: { onChanged: () => void }) {
   const qc = useQueryClient();
   const listFn = useServerFn(adminListUsers);
   const roleFn = useServerFn(adminSetRole);
+  const verifyFn = useServerFn(adminSetVerified);
+  const verifyMut = useMutation({
+    mutationFn: (v: { user_id: string; verified: boolean }) => verifyFn({ data: v }),
+    onSuccess: (_r, v) => {
+      toast.success(v.verified ? "تم توثيق الحساب" : "تم إلغاء التوثيق");
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e) => toast.error(friendlyError(e, "تعذّر تحديث التوثيق")),
+  });
   const creditsFn = useServerFn(adminAdjustCredits);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -279,7 +303,7 @@ function UsersTab({ onChanged }: { onChanged: () => void }) {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-bold">
-                  {u.full_name || u.username}{" "}
+                  {u.full_name || u.username}{" "}<VerifiedBadge show={u.is_verified} />{" "}
                   {u.is_admin && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">مسؤول</span>}
                   {u.is_moderator && <span className="mr-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">مشرف</span>}
                 </p>
@@ -288,6 +312,14 @@ function UsersTab({ onChanged }: { onChanged: () => void }) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={u.is_verified ? "secondary" : "default"}
+                  disabled={verifyMut.isPending}
+                  onClick={() => verifyMut.mutate({ user_id: u.id, verified: !u.is_verified })}
+                >
+                  {u.is_verified ? "إلغاء التوثيق" : "منح شارة التوثيق"}
+                </Button>
                 <Button
                   size="sm"
                   variant={u.is_admin ? "destructive" : "outline"}

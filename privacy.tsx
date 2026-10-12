@@ -78,7 +78,7 @@ function PrivacyPage() {
           <p>قد نحدّث هذه السياسة من وقت لآخر. سيُعلَن أي تغيير جوهري داخل التطبيق.</p>
 
           <h2 className="mt-6 text-xl font-bold">8. التواصل</h2>
-          <p>لأي استفسار حول الخصوصية، تواصل معنا عبر صفحة <Link to="/messages" search={{}} className="text-primary underline">الرسائل</Link>.</p>
+          <p>لأي استفسار حول الخصوصية، تواصل معنا عبر صفحة <Link to="/messages" search={{ to: undefined }} className="text-primary underline">الرسائل</Link>.</p>
 
           <p className="pt-6 text-xs text-muted-foreground">
             بالإضافة إلى <Link to="/terms" className="text-primary underline">شروط الاستخدام</Link>.

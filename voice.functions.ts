@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callLovableAI } from "./ai-gateway.server";
+import { profileChatFreeFallback } from "./free-ai-fallback";
 
 /**
  * المحادثة مع الصفحة الشخصية: يستقبل سؤال المستخدم وبيانات صفحته
@@ -53,16 +54,21 @@ ${(videos ?? []).slice(0, 5).map((v: any, i) => `${i + 1}. ${v.title} (${v.views
 أجب بإيجاز وبالعربية الفصحى الواضحة. لا تستخدم رموز Markdown.`;
 
     const history = (data.history ?? []).map((m) => ({ role: m.role, content: m.content }));
-    const content = await callLovableAI({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: summary },
-        ...history,
-        { role: "user", content: data.question },
-      ],
-      temperature: 0.7,
-    });
-    return { reply: content.trim() };
+    try {
+      const content = await callLovableAI({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: summary },
+          ...history,
+          { role: "user", content: data.question },
+        ],
+        temperature: 0.7,
+      });
+      return { reply: content.trim() };
+    } catch (e) {
+      console.error("chatWithProfile fallback:", e);
+      return { reply: profileChatFreeFallback(data.question, profile?.full_name || profile?.username || "") };
+    }
   });
 
 /**

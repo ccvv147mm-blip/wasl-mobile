@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callLovableAI } from "./ai-gateway.server";
+import { diagnoseErrorFreeFallback } from "./free-ai-fallback";
 
 const ReportInput = z.object({
   route: z.string().max(300).optional(),
@@ -68,6 +69,13 @@ Stack (مختصر): ${(data.stack ?? "").slice(0, 1500)}`,
         .eq("id", row.id);
     } catch (e) {
       console.error("AI diagnose failed:", e);
+      const fallback = diagnoseErrorFreeFallback(data.message);
+      diagnosis = fallback.diagnosis;
+      suggestion = fallback.suggestion;
+      await supabase
+        .from("error_reports")
+        .update({ ai_diagnosis: diagnosis, ai_suggestion: suggestion, status: "diagnosed" })
+        .eq("id", row.id);
     }
 
     return { id: row.id, diagnosis, suggestion };

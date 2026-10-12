@@ -1,18 +1,20 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCredits } from "@/hooks/use-credits";
-import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Eye, Gift, Radio, Send, PhoneOff, Mic, MicOff, VideoOff, Video as VideoIcon } from "lucide-react";
+import { Loader2, Eye, Gift, Send, PhoneOff, Mic, MicOff, VideoOff, Video as VideoIcon, Gamepad2, X, ArrowRight, Users, Sparkles, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/friendly-error";
 import { publicName } from "@/lib/display-name";
 import { startHosting, startWatching } from "@/lib/live-rtc";
+import { LiveGames } from "@/components/LiveGames";
+import { LiveInvite } from "@/components/LiveInvite";
+import { LiveNowList } from "@/components/LiveNowList";
 
 export const Route = createFileRoute("/live/$streamId")({
   component: LiveRoom,
@@ -39,6 +41,19 @@ const GIFTS = [
   { type: "lion", emoji: "🦁", name: "أسد", value: 5000 },
 ];
 
+const FILTERS = [
+  { id: "none", name: "بدون", css: "none" },
+  { id: "bright", name: "إشراق", css: "brightness(1.15) saturate(1.15)" },
+  { id: "soft", name: "ناعم", css: "brightness(1.08) contrast(0.95) saturate(1.05) blur(0.4px)" },
+  { id: "glow", name: "توهج", css: "brightness(1.2) contrast(1.05) saturate(1.3)" },
+  { id: "warm", name: "دافئ", css: "sepia(0.25) saturate(1.3) brightness(1.05)" },
+  { id: "cool", name: "بارد", css: "hue-rotate(-15deg) saturate(1.2) brightness(1.05)" },
+  { id: "vivid", name: "حيوي", css: "contrast(1.25) saturate(1.6)" },
+  { id: "mono", name: "أبيض وأسود", css: "grayscale(1) contrast(1.1)" },
+  { id: "retro", name: "قديم", css: "sepia(0.6) contrast(1.1) saturate(0.9)" },
+  { id: "night", name: "ليلي", css: "brightness(1.35) contrast(1.15) saturate(0.9)" },
+];
+
 type ChatRow = {
   id: string;
   author_id: string;
@@ -61,6 +76,20 @@ function LiveRoom() {
   const [chat, setChat] = useState<ChatRow[]>([]);
   const [floating, setFloating] = useState<{ id: string; emoji: string }[]>([]);
   const [sendingGift, setSendingGift] = useState<string | null>(null);
+  const [showUI, setShowUI] = useState(true);
+  const [panel, setPanel] = useState<null | "games" | "gifts" | "chat" | "filters" | "livenow">(null);
+  const [filterId, setFilterId] = useState("none");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("wasl-live-filter");
+    if (saved && FILTERS.some((f) => f.id === saved)) setFilterId(saved);
+  }, []);
+
+  const activeFilter = FILTERS.find((f) => f.id === filterId) ?? FILTERS[0];
+  const pickFilter = (id: string) => {
+    setFilterId(id);
+    localStorage.setItem("wasl-live-filter", id);
+  };
 
   const balance = useCredits(user?.id, true);
 
@@ -177,6 +206,14 @@ function LiveRoom() {
     return () => void supabase.removeChannel(ch);
   }, [user, streamId]);
 
+  // المشاركون في البث (من الدردشة)
+  const participants = useMemo(() => {
+    const map = new Map<string, { id: string; profiles: ChatRow["profiles"] }>();
+    for (const c of chat) map.set(c.author_id, { id: c.author_id, profiles: c.profiles });
+    if (stream.data) map.set(stream.data.host_id, { id: stream.data.host_id, profiles: stream.data.profiles });
+    return [...map.values()];
+  }, [chat, stream.data]);
+
   const sendMessage = async () => {
     const content = msg.trim();
     if (!content) return;
@@ -229,141 +266,263 @@ function LiveRoom() {
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
   if (!user) return <Navigate to="/login" />;
 
+  if (stream.isLoading) {
+    return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="animate-spin text-white" /></div>;
+  }
+  if (!stream.data) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-black p-6 text-center text-sm text-white/80">
+        هذا البث غير موجود.
+        <Link to="/live" className="text-primary underline">عودة للبثوث</Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="mx-auto max-w-3xl px-3 py-4">
-        {stream.isLoading ? (
-          <div className="flex justify-center py-10"><Loader2 className="animate-spin text-muted-foreground" /></div>
-        ) : !stream.data ? (
-          <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-            هذا البث غير موجود. <Link to="/live" className="text-primary underline">عودة للبثوث</Link>
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black">
+      {/* الفيديو بملء الشاشة */}
+      <video
+        ref={videoRef}
+        playsInline
+        autoPlay
+        onClick={() => { if (panel) setPanel(null); else setShowUI((v) => !v); }}
+        className="h-full w-full object-cover transition-[filter] duration-300"
+        style={{ filter: activeFilter.css }}
+      />
+
+      {/* شرائح المعلومات أعلى الشاشة */}
+      <div className={`pointer-events-none absolute inset-x-0 top-0 p-3 transition-opacity ${showUI ? "opacity-100" : "opacity-0"}`}>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+          <Link
+            to="/live"
+            className="pointer-events-auto grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/50 text-white"
+            aria-label="رجوع"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <div className="pointer-events-auto flex min-w-0 items-center gap-2 rounded-full bg-black/45 px-2 py-1 backdrop-blur-sm">
+            <Avatar className="h-7 w-7 shrink-0">
+              <AvatarImage src={stream.data.profiles?.avatar_url ?? undefined} />
+              <AvatarFallback>{publicName(stream.data.profiles).charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span className="truncate text-xs font-semibold text-white" data-no-translate>{publicName(stream.data.profiles)}</span>
+            {!ended ? (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> مباشر
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">انتهى</span>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-black shadow-card">
-              <video ref={videoRef} playsInline autoPlay className="aspect-[9/12] w-full bg-black object-cover sm:aspect-video" />
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
+            <Eye className="h-3 w-3" /> {isHost ? viewers : stream.data.viewers_count}
+          </span>
+          <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
+            <Gift className="h-3 w-3 text-amber-400" /> {stream.data.total_gift_points}
+          </span>
+          <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
+            <Users className="h-3 w-3" /> {participants.length}
+          </span>
+          <span className="max-w-[60vw] truncate rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">{stream.data.title}</span>
+        </div>
+      </div>
 
-              <div className="absolute start-3 top-3 flex items-center gap-2">
-                {!ended ? (
-                  <span className="flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> مباشر
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">انتهى البث</span>
-                )}
-                <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
-                  <Eye className="h-3 w-3" /> {isHost ? viewers : stream.data.viewers_count}
-                </span>
-                <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white">
-                  <Gift className="h-3 w-3 text-amber-400" /> {stream.data.total_gift_points}
-                </span>
-              </div>
+      {/* تعليقات متطايرة */}
+      <div className={`pointer-events-none absolute bottom-28 start-3 end-16 flex flex-col justify-end gap-1 transition-opacity ${showUI ? "opacity-100" : "opacity-0"}`}>
+        {chat.slice(-5).map((c) => (
+          <div key={c.id} className="flex items-center gap-2 self-start rounded-full bg-black/45 px-2 py-1 backdrop-blur-sm">
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={c.profiles?.avatar_url ?? undefined} />
+              <AvatarFallback className="text-[9px]">{publicName(c.profiles).charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span className="text-[11px] font-bold text-white" data-no-translate>{publicName(c.profiles)}</span>
+            <span className="max-w-[55vw] truncate text-[11px] text-white/90">{c.content}</span>
+          </div>
+        ))}
+      </div>
 
-              <div className="absolute bottom-3 start-3 flex items-center gap-2 rounded-full bg-black/50 px-2 py-1">
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={stream.data.profiles?.avatar_url ?? undefined} />
-                  <AvatarFallback>{publicName(stream.data.profiles).charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-xs font-semibold text-white" data-no-translate>{publicName(stream.data.profiles)}</span>
-              </div>
+      {/* هدايا متطايرة */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {floating.map((f) => (
+          <span key={f.id} className="absolute bottom-24 end-8 animate-[float-up_3s_ease-out_forwards] text-4xl">{f.emoji}</span>
+        ))}
+      </div>
 
-              {/* هدايا متطايرة */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                {floating.map((f) => (
-                  <span key={f.id} className="absolute bottom-6 end-8 animate-[float-up_3s_ease-out_forwards] text-4xl">
-                    {f.emoji}
-                  </span>
-                ))}
-              </div>
+      {state === "connecting" && !ended && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 text-sm text-white">
+          <Loader2 className="me-2 h-4 w-4 animate-spin" /> جارٍ الاتصال بالبث...
+        </div>
+      )}
+      {state === "failed" && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white">
+          تعذّر الاتصال بالبث. تأكد من الإنترنت وحاول تحديث الصفحة.
+        </div>
+      )}
 
-              {state === "connecting" && !ended && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm text-white">
-                  <Loader2 className="me-2 h-4 w-4 animate-spin" /> جارٍ الاتصال بالبث...
-                </div>
+      {/* شريط الأدوات السفلي */}
+      <div className={`absolute inset-x-0 bottom-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity ${showUI ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+        {!ended && (
+          <form
+            onSubmit={(e) => { e.preventDefault(); void sendMessage(); }}
+            className="mb-2 flex gap-2"
+          >
+            <Input
+              value={msg}
+              onChange={(e) => setMsg(e.target.value)}
+              placeholder="اكتب رسالة..."
+              maxLength={300}
+              className="border-white/20 bg-black/45 text-white placeholder:text-white/50"
+            />
+            <Button type="submit" size="sm" className="shrink-0"><Send className="h-4 w-4" /></Button>
+          </form>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="secondary" className="gap-1" onClick={() => setPanel("games")}>
+            <Gamepad2 className="h-4 w-4" /> الألعاب
+          </Button>
+          {!isHost && !ended && (
+            <Button size="sm" variant="secondary" className="gap-1" onClick={() => setPanel("gifts")}>
+              <Gift className="h-4 w-4" /> هدايا
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" className="gap-1" onClick={() => setPanel("chat")}>
+            <Users className="h-4 w-4" /> الدردشة
+          </Button>
+          <Button size="sm" variant="secondary" className="gap-1" onClick={() => setPanel("filters")}>
+            <Sparkles className="h-4 w-4" /> فلاتر
+          </Button>
+          <Button size="sm" variant="secondary" className="gap-1" onClick={() => setPanel("livenow")}>
+            <Radio className="h-4 w-4 text-red-500" /> بثوث الآن
+          </Button>
+          {isHost && (
+            <>
+              <Button size="sm" variant="secondary" className="gap-1" onClick={toggleMic}>
+                {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+              <Button size="sm" variant="secondary" className="gap-1" onClick={toggleCam}>
+                {camOff ? <VideoOff className="h-4 w-4" /> : <VideoIcon className="h-4 w-4" />}
+              </Button>
+              {!ended && (
+                <Button size="sm" variant="destructive" className="gap-1" onClick={endStream}>
+                  <PhoneOff className="h-4 w-4" /> إنهاء
+                </Button>
               )}
-              {state === "failed" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-white">
-                  تعذّر الاتصال بالبث. تأكد من الإنترنت وحاول تحديث الصفحة.
-                </div>
-              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* لوحة منبثقة داخل البث */}
+      {panel && (
+        <div className="absolute inset-0 z-10 flex flex-col justify-end bg-black/40" onClick={() => setPanel(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[78%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-neutral-900/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white backdrop-blur-md"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-bold">
+                {panel === "games" ? "الألعاب والتحديات" : panel === "gifts" ? "إرسال هدية" : panel === "filters" ? "فلاتر الصورة" : panel === "livenow" ? "بثوث مباشرة الآن" : "الدردشة والمشاركون"}
+              </h2>
+              <button onClick={() => setPanel(null)} aria-label="إغلاق" className="grid h-8 w-8 place-items-center rounded-full bg-white/10">
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            <h1 className="mt-3 flex items-center gap-2 text-base font-bold">
-              <Radio className="h-4 w-4 text-red-500" /> {stream.data.title}
-            </h1>
-
-            {isHost ? (
-              <div className="mt-3 flex gap-2">
-                <Button variant="secondary" size="sm" onClick={toggleMic} className="gap-1">
-                  {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {muted ? "تشغيل الصوت" : "كتم"}
-                </Button>
-                <Button variant="secondary" size="sm" onClick={toggleCam} className="gap-1">
-                  {camOff ? <VideoOff className="h-4 w-4" /> : <VideoIcon className="h-4 w-4" />} {camOff ? "تشغيل الكاميرا" : "إيقاف الكاميرا"}
-                </Button>
-                {!ended && (
-                  <Button variant="destructive" size="sm" onClick={endStream} className="gap-1">
-                    <PhoneOff className="h-4 w-4" /> إنهاء
-                  </Button>
-                )}
-              </div>
-            ) : (
-              !ended && (
-                <div className="mt-3 rounded-2xl border border-border bg-card p-3">
-                  <p className="mb-2 text-xs text-muted-foreground">
-                    رصيدك: <span className="font-bold text-foreground">{balance.data ?? "..."}</span> نقطة
-                  </p>
-                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-                    {GIFTS.map((g) => (
-                      <button
-                        key={g.type}
-                        onClick={() => sendGift(g.type, g.value)}
-                        disabled={sendingGift !== null || (balance.data ?? 0) < g.value}
-                        className="flex shrink-0 flex-col items-center rounded-xl border border-border px-3 py-2 text-center transition hover:border-primary/60 disabled:opacity-40"
-                      >
-                        <span className="text-2xl">{g.emoji}</span>
-                        <span className="text-[11px] font-semibold">{g.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{g.value} نقطة</span>
-                      </button>
-                    ))}
-                  </div>
+            {panel === "filters" && (
+              <div>
+                <p className="mb-2 text-xs text-white/70">اختر فلتراً لتحسين صورة البث — يُحفظ اختيارك تلقائياً.</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => pickFilter(f.id)}
+                      className={`flex flex-col items-center gap-1 rounded-xl border p-1.5 transition ${
+                        filterId === f.id ? "border-primary bg-primary/15" : "border-white/15 hover:border-white/40"
+                      }`}
+                    >
+                      <span
+                        className="h-12 w-full rounded-lg bg-gradient-to-br from-amber-200 via-rose-400 to-indigo-600"
+                        style={{ filter: f.css }}
+                      />
+                      <span className="text-[10px] font-semibold">{f.name}</span>
+                    </button>
+                  ))}
                 </div>
-              )
+              </div>
             )}
 
-            {/* الدردشة */}
-            <div className="mt-4 rounded-2xl border border-border bg-card">
-              <div className="max-h-72 space-y-2 overflow-y-auto p-3">
-                {chat.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-muted-foreground">لا رسائل بعد — ابدأ الدردشة</p>
-                ) : (
-                  chat.map((c) => (
-                    <div key={c.id} className="flex items-start gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={c.profiles?.avatar_url ?? undefined} />
-                        <AvatarFallback>{publicName(c.profiles).charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <p className="text-sm">
-                        <span className="font-semibold" data-no-translate>{publicName(c.profiles)}</span>{" "}
-                        <span className="text-muted-foreground">{c.content}</span>
-                      </p>
-                    </div>
-                  ))
-                )}
+            {panel === "livenow" && (
+              <div className="space-y-2">
+                <p className="text-xs text-white/70">
+                  كل المستخدمين الذين يبثون مباشرة الآن — أرسل لهم طلب دعوة للعب أو للدردشة، أو ادخل بثهم.
+                </p>
+                <LiveNowList userId={user.id} currentStreamId={streamId} />
               </div>
-              {!ended && (
-                <form
-                  onSubmit={(e) => { e.preventDefault(); void sendMessage(); }}
-                  className="flex gap-2 border-t border-border p-2"
-                >
-                  <Input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="اكتب رسالة..." maxLength={300} />
-                  <Button type="submit" size="sm" className="shrink-0"><Send className="h-4 w-4" /></Button>
-                </form>
-              )}
-            </div>
-          </>
-        )}
-      </main>
+            )}
+
+            {panel === "games" && (
+              <div className="space-y-3">
+                <LiveGames
+                  streamId={streamId}
+                  isHost={isHost}
+                  userId={user.id}
+                  ended={ended}
+                  onBalanceChange={() => void balance.refetch()}
+                />
+                <LiveInvite streamId={streamId} userId={user.id} viewers={participants} />
+              </div>
+            )}
+
+            {panel === "gifts" && (
+              <div>
+                <p className="mb-2 text-xs text-white/70">
+                  رصيدك: <span className="font-bold text-white">{balance.data ?? "..."}</span> نقطة
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {GIFTS.map((g) => (
+                    <button
+                      key={g.type}
+                      onClick={() => sendGift(g.type, g.value)}
+                      disabled={sendingGift !== null || (balance.data ?? 0) < g.value}
+                      className="flex flex-col items-center rounded-xl border border-white/15 px-3 py-2 text-center transition hover:border-primary/60 disabled:opacity-40"
+                    >
+                      <span className="text-2xl">{g.emoji}</span>
+                      <span className="text-[11px] font-semibold">{g.name}</span>
+                      <span className="text-[10px] text-white/60">{g.value} نقطة</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {panel === "chat" && (
+              <div className="space-y-3">
+                <div className="max-h-56 space-y-2 overflow-y-auto">
+                  {chat.length === 0 ? (
+                    <p className="py-6 text-center text-xs text-white/60">لا رسائل بعد — ابدأ الدردشة</p>
+                  ) : (
+                    chat.map((c) => (
+                      <div key={c.id} className="flex items-start gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={c.profiles?.avatar_url ?? undefined} />
+                          <AvatarFallback>{publicName(c.profiles).charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-sm">
+                          <span className="font-semibold" data-no-translate>{publicName(c.profiles)}</span>{" "}
+                          <span className="text-white/70">{c.content}</span>
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <LiveInvite streamId={streamId} userId={user.id} viewers={participants} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -37,7 +37,7 @@ function MessagesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-3xl px-3 py-4">
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
         {peerId ? <Thread peerId={peerId} onBack={() => setPeerId(null)} /> : <Inbox onOpen={setPeerId} />}
       </main>
     </div>
@@ -57,20 +57,22 @@ function Inbox({ onOpen }: { onOpen: (id: string) => void }) {
 
   return (
     <div>
-      <h1 className="mb-3 text-2xl font-bold">الرسائل</h1>
-      <div className="relative">
-        <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث بالاسم، المعرّف، أو رقم الهاتف..." className="pe-10" />
+      <div className="px-4 sm:px-0">
+        <h1 className="mb-3 text-2xl font-bold">الرسائل</h1>
+        <div className="relative">
+          <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث بالاسم، المعرّف، أو رقم الهاتف..." className="pe-10" />
+        </div>
       </div>
 
       {q.trim().length >= 2 && (
-        <div className="mt-3 rounded-2xl border border-border bg-card p-2 shadow-card">
+        <div className="mt-3 border-b border-border bg-card sm:mx-4 sm:mt-4 sm:rounded-2xl sm:border sm:border-border sm:shadow-card sm:p-2">
           {found.isLoading && <div className="p-3 text-center text-sm text-muted-foreground">بحث...</div>}
           {found.data?.users.length === 0 && <div className="p-3 text-center text-sm text-muted-foreground">لا نتائج</div>}
           {found.data?.users.map((u) => (
-            <div key={u.id} className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-muted">
+            <div key={u.id} className="flex items-center gap-2 border-b border-border px-2 py-2 last:border-b-0 hover:bg-accent sm:rounded-xl sm:border-b-0 sm:px-2 sm:py-1.5">
               <button onClick={() => onOpen(u.id)} className="flex flex-1 items-center gap-3 text-start">
-                <Avatar className="h-9 w-9">
+                <Avatar className="h-9 w-9 shrink-0">
                   {u.avatar_url && <AvatarImage src={u.avatar_url} />}
                   <AvatarFallback className="gradient-primary text-sm font-bold text-primary-foreground">
                     {(publicName(u)).charAt(0)}
@@ -86,10 +88,10 @@ function Inbox({ onOpen }: { onOpen: (id: string) => void }) {
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-4">
         {list.isLoading && <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>}
         {list.data && list.data.conversations.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+          <div className="mx-4 rounded-2xl border border-dashed border-border p-12 text-center sm:mx-0">
             <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground" />
             <p className="mt-3 text-muted-foreground">لا توجد محادثات بعد. ابحث عن مستخدم وابدأ.</p>
           </div>
@@ -98,9 +100,9 @@ function Inbox({ onOpen }: { onOpen: (id: string) => void }) {
           <button
             key={c.peerId}
             onClick={() => onOpen(c.peerId)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-start transition hover:shadow-card"
+            className="flex w-full items-center gap-3 border-b border-border bg-card p-3 text-start transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card"
           >
-            <Avatar className="h-11 w-11">
+            <Avatar className="h-11 w-11 shrink-0">
               {c.peer?.avatar_url && <AvatarImage src={c.peer.avatar_url} />}
               <AvatarFallback className="gradient-primary text-sm font-bold text-primary-foreground">
                 {(publicName(c.peer)).charAt(0)}

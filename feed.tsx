@@ -53,7 +53,7 @@ function FeedPage() {
         .from("posts")
         .select(`
           id, content, image_url, video_url, created_at, author_id,
-          author:profiles!posts_author_id_fkey(username, full_name, avatar_url),
+          author:profiles!posts_author_id_fkey(username, full_name, avatar_url, is_verified),
           likes(user_id), comments(id), gifts(id), shares(id)
         `)
         .in("author_id", ids)
@@ -78,28 +78,30 @@ function FeedPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-elegant">
-              <Users className="h-4 w-4 text-primary-foreground" />
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <div className="px-4 sm:px-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-elegant">
+                <Users className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">خلاصة الأصدقاء</h1>
+                <p className="text-xs text-muted-foreground">منشورات من قبلتَ صداقتهم</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold">خلاصة الأصدقاء</h1>
-              <p className="text-xs text-muted-foreground">منشورات من قبلتَ صداقتهم</p>
-            </div>
+            <Button asChild size="sm" variant="outline"><Link to="/friends"><UserPlus className="h-4 w-4" /> إدارة</Link></Button>
           </div>
-          <Button asChild size="sm" variant="outline"><Link to="/friends"><UserPlus className="h-4 w-4" /> إدارة</Link></Button>
         </div>
 
         {(feed.isLoading || friends.isLoading) && <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
         {feed.data && feed.data.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+          <div className="mx-4 rounded-2xl border border-dashed border-border p-10 text-center sm:mx-0">
             <p className="text-muted-foreground">لا توجد منشورات من أصدقائك بعد.</p>
             <Button asChild className="mt-4"><Link to="/friends">أضف أصدقاء</Link></Button>
           </div>
         )}
-        <div className="space-y-4">
+        <div>
           {feed.data?.map((p) => <PostCard key={p.id} post={p} />)}
         </div>
       </main>

@@ -98,65 +98,65 @@ function LiveIndex() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-3xl px-3 py-4">
-        <div className="mb-5 rounded-2xl border border-border bg-card p-4 shadow-card">
-          <h1 className="flex items-center gap-2 text-lg font-bold">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
-              <Radio className="h-4 w-4 text-red-500" />
-            </span>
-            البث المباشر
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            ابدأ بثاً بالكاميرا واستقبل الهدايا من المشاهدين لحظياً — تُضاف النقاط إلى رصيدك فوراً بعد خصم نسبة التطبيق.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="عنوان البث (اختياري)"
-              maxLength={80}
-            />
-            <Button onClick={goLive} disabled={starting} className="shrink-0 gap-1">
-              {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
-              ابدأ البث
-            </Button>
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <div className="mb-5 px-4 sm:px-0">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+            <h1 className="flex items-center gap-2 text-lg font-bold">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
+                <Radio className="h-4 w-4 text-red-500" />
+              </span>
+              البث المباشر
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              ابدأ بثاً بالكاميرا واستقبل الهدايا من المشاهدين لحظياً — تُضاف النقاط إلى رصيدك فوراً بعد خصم نسبة التطبيق.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="عنوان البث (اختياري)"
+                maxLength={80}
+              />
+              <Button onClick={goLive} disabled={starting} className="shrink-0 gap-1">
+                {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+                ابدأ البث
+              </Button>
+            </div>
           </div>
         </div>
 
-        <h2 className="mb-2 text-sm font-bold text-muted-foreground">بثوث جارية الآن</h2>
+        <h2 className="mb-2 px-4 text-sm font-bold text-muted-foreground sm:px-0">بثوث جارية الآن</h2>
 
         {streams.isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="animate-spin text-muted-foreground" /></div>
         ) : (streams.data?.length ?? 0) === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          <div className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground sm:mx-0">
             لا توجد بثوث مباشرة حالياً — كن أول من يبدأ!
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 sm:gap-3">
             {streams.data!.map((s) => (
               <Link
                 key={s.id}
                 to="/live/$streamId"
                 params={{ streamId: s.id }}
-                className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-card transition hover:border-primary/50"
+                className="group flex items-center gap-3 border-b border-border bg-card p-4 transition hover:bg-accent sm:rounded-2xl sm:border sm:border-border sm:shadow-card sm:hover:border-primary/50"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11 ring-2 ring-red-500">
-                    <AvatarImage src={s.profiles?.avatar_url ?? undefined} />
-                    <AvatarFallback>{publicName(s.profiles).charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold" data-no-translate>{publicName(s.profiles)}</p>
-                    <p className="truncate text-xs text-muted-foreground">{s.title}</p>
+                <Avatar className="h-11 w-11 shrink-0 ring-2 ring-red-500">
+                  <AvatarImage src={s.profiles?.avatar_url ?? undefined} />
+                  <AvatarFallback>{publicName(s.profiles).charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold" data-no-translate>{publicName(s.profiles)}</p>
+                  <p className="truncate text-xs text-muted-foreground">{s.title}</p>
+                  <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {s.viewers_count}</span>
+                    <span className="flex items-center gap-1"><Gift className="h-3.5 w-3.5 text-amber-500" /> {s.total_gift_points} نقطة</span>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> مباشر
-                  </span>
                 </div>
-                <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {s.viewers_count}</span>
-                  <span className="flex items-center gap-1"><Gift className="h-3.5 w-3.5 text-amber-500" /> {s.total_gift_points} نقطة</span>
-                </div>
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> مباشر
+                </span>
               </Link>
             ))}
           </div>

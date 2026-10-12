@@ -62,8 +62,8 @@ function FriendsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-4 flex items-center gap-2">
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <div className="mb-4 flex items-center gap-2 px-4 sm:px-0">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-elegant">
             <Users className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -71,22 +71,24 @@ function FriendsPage() {
         </div>
 
         <Tabs defaultValue="friends">
-          <TabsList className="w-full overflow-x-auto">
-            <TabsTrigger value="friends" className="flex-1">أصدقائي ({friends.data?.friends.length ?? 0})</TabsTrigger>
-            <TabsTrigger value="incoming" className="flex-1">واردة ({reqs.data?.incoming.length ?? 0})</TabsTrigger>
-            <TabsTrigger value="outgoing" className="flex-1">صادرة ({reqs.data?.outgoing.length ?? 0})</TabsTrigger>
-            <TabsTrigger value="suggestions" className="flex-1">الاقتراحات</TabsTrigger>
-          </TabsList>
+          <div className="px-4 sm:px-0">
+            <TabsList className="w-full overflow-x-auto">
+              <TabsTrigger value="friends" className="flex-1">أصدقائي ({friends.data?.friends.length ?? 0})</TabsTrigger>
+              <TabsTrigger value="incoming" className="flex-1">واردة ({reqs.data?.incoming.length ?? 0})</TabsTrigger>
+              <TabsTrigger value="outgoing" className="flex-1">صادرة ({reqs.data?.outgoing.length ?? 0})</TabsTrigger>
+              <TabsTrigger value="suggestions" className="flex-1">الاقتراحات</TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="suggestions" className="space-y-2 pt-4">
-            <p className="text-sm font-semibold text-muted-foreground">أشخاص قد تعرفهم</p>
+          <TabsContent value="suggestions" className="pt-4">
+            <p className="px-4 text-sm font-semibold text-muted-foreground sm:px-0">أشخاص قد تعرفهم</p>
             {suggestions.isLoading && <Loader2 className="mx-auto animate-spin" />}
             {suggestions.data?.suggestions.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">لا اقتراحات حالياً.</p>
+              <p className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground sm:mx-0">لا اقتراحات حالياً.</p>
             )}
             {suggestions.data?.suggestions.map((u: any) => (
-              <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-                <Avatar className="h-11 w-11">
+              <div key={u.id} className="flex items-center gap-3 border-b border-border bg-card p-3 transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card">
+                <Avatar className="h-11 w-11 shrink-0">
                   {u.avatar_url && <AvatarImage src={u.avatar_url} />}
                   <AvatarFallback className="gradient-primary text-primary-foreground font-bold">{(publicName(u)).charAt(0)}</AvatarFallback>
                 </Avatar>
@@ -99,14 +101,14 @@ function FriendsPage() {
           </TabsContent>
 
 
-          <TabsContent value="friends" className="space-y-2 pt-4">
+          <TabsContent value="friends" className="pt-4">
             {friends.isLoading && <Loader2 className="mx-auto animate-spin" />}
             {friends.data?.friends.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">لا أصدقاء بعد. ابحث عن مستخدمين في الرسائل وأرسل طلبات.</p>
+              <p className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground sm:mx-0">لا أصدقاء بعد. ابحث عن مستخدمين في الرسائل وأرسل طلبات.</p>
             )}
             {friends.data?.friends.map((f: any) => (
-              <div key={f.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-                <Avatar className="h-11 w-11">
+              <div key={f.id} className="flex items-center gap-3 border-b border-border bg-card p-3 transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card">
+                <Avatar className="h-11 w-11 shrink-0">
                   {f.avatar_url && <AvatarImage src={f.avatar_url} />}
                   <AvatarFallback className="gradient-primary text-primary-foreground font-bold">{(publicName(f)).charAt(0)}</AvatarFallback>
                 </Avatar>
@@ -120,11 +122,11 @@ function FriendsPage() {
             ))}
           </TabsContent>
 
-          <TabsContent value="incoming" className="space-y-2 pt-4">
-            {reqs.data?.incoming.length === 0 && <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">لا طلبات واردة.</p>}
+          <TabsContent value="incoming" className="pt-4">
+            {reqs.data?.incoming.length === 0 && <p className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground sm:mx-0">لا طلبات واردة.</p>}
             {reqs.data?.incoming.map((u: any) => (
-              <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-                <Avatar className="h-11 w-11">
+              <div key={u.id} className="flex items-center gap-3 border-b border-border bg-card p-3 transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card">
+                <Avatar className="h-11 w-11 shrink-0">
                   {u.avatar_url && <AvatarImage src={u.avatar_url} />}
                   <AvatarFallback>{(publicName(u)).charAt(0)}</AvatarFallback>
                 </Avatar>
@@ -137,11 +139,11 @@ function FriendsPage() {
             ))}
           </TabsContent>
 
-          <TabsContent value="outgoing" className="space-y-2 pt-4">
-            {reqs.data?.outgoing.length === 0 && <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">لا طلبات صادرة.</p>}
+          <TabsContent value="outgoing" className="pt-4">
+            {reqs.data?.outgoing.length === 0 && <p className="mx-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground sm:mx-0">لا طلبات صادرة.</p>}
             {reqs.data?.outgoing.map((u: any) => (
-              <div key={u.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-                <Avatar className="h-11 w-11">
+              <div key={u.id} className="flex items-center gap-3 border-b border-border bg-card p-3 transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card">
+                <Avatar className="h-11 w-11 shrink-0">
                   {u.avatar_url && <AvatarImage src={u.avatar_url} />}
                   <AvatarFallback>{(publicName(u)).charAt(0)}</AvatarFallback>
                 </Avatar>

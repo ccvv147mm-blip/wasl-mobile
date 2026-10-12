@@ -50,7 +50,10 @@ function LoginPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("تعذّر تسجيل الدخول عبر Google");
+    if (result.error) {
+      console.error("Google sign-in error", result.error);
+      return toast.error(`تعذّر تسجيل الدخول عبر Google: ${result.error.message ?? ""}`);
+    }
     if (result.redirected) return;
     navigate({ to: "/feed" });
   };

@@ -99,7 +99,7 @@ export const adminSetSetting = createServerFn({ method: "POST" })
           "orange_cash_number",
           "live_gift_fee_percent",
         ]),
-        value: z.string().min(3).max(120),
+        value: z.string().trim().min(1).max(120),
       })
       .parse(input),
   )
@@ -210,4 +210,18 @@ export const adminGetLiveFee = createServerFn({ method: "GET" })
       .eq("key", "live_gift_fee_percent")
       .maybeSingle();
     return { percent: Number(data?.value ?? 10) };
+  });
+
+export const adminSetVerified = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ user_id: z.string().uuid(), verified: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await (context.supabase as any).rpc("admin_set_verified", {
+      _user_id: data.user_id,
+      _verified: data.verified,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

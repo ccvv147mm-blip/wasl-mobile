@@ -134,6 +134,75 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_news: {
+        Row: {
+          country: string
+          created_at: string
+          date_label: string | null
+          items: Json
+          news_date: string
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          date_label?: string | null
+          items?: Json
+          news_date: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          date_label?: string | null
+          items?: Json
+          news_date?: string
+        }
+        Relationships: []
+      }
       error_reports: {
         Row: {
           ai_diagnosis: string | null
@@ -364,6 +433,100 @@ export type Database = {
           },
         ]
       }
+      live_game_participants: {
+        Row: {
+          answer: string | null
+          created_at: string
+          game_id: string
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_game_participants_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "live_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_games: {
+        Row: {
+          answer: string | null
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          kind: string
+          prize_points: number
+          prompt: string | null
+          started_at: string
+          status: string
+          stream_id: string
+          title: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          kind: string
+          prize_points?: number
+          prompt?: string | null
+          started_at?: string
+          status?: string
+          stream_id: string
+          title: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          kind?: string
+          prize_points?: number
+          prompt?: string | null
+          started_at?: string
+          status?: string
+          stream_id?: string
+          title?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_games_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_gifts: {
         Row: {
           created_at: string
@@ -479,6 +642,33 @@ export type Database = {
           read?: boolean
           recipient_id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      music_tracks: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          prompt: string | null
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          prompt?: string | null
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          prompt?: string | null
+          title?: string
+          url?: string
         }
         Relationships: []
       }
@@ -602,6 +792,7 @@ export type Database = {
           full_name: string | null
           id: string
           interests: string | null
+          is_verified: boolean
           phone: string | null
           updated_at: string
           username: string
@@ -616,6 +807,7 @@ export type Database = {
           full_name?: string | null
           id: string
           interests?: string | null
+          is_verified?: boolean
           phone?: string | null
           updated_at?: string
           username: string
@@ -630,9 +822,37 @@ export type Database = {
           full_name?: string | null
           id?: string
           interests?: string | null
+          is_verified?: boolean
           phone?: string | null
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -727,6 +947,80 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories: {
+        Row: {
+          author_id: string
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          image_url: string
+          music_title: string | null
+          music_url: string | null
+        }
+        Insert: {
+          author_id: string
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_url: string
+          music_title?: string | null
+          music_url?: string | null
+        }
+        Update: {
+          author_id?: string
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_url?: string
+          music_title?: string | null
+          music_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_views: {
+        Row: {
+          created_at: string
+          story_id: string
+          viewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          story_id: string
+          viewer_id: string
+        }
+        Update: {
+          created_at?: string
+          story_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -909,7 +1203,11 @@ export type Database = {
           author_id: string
           created_at: string
           duration_seconds: number | null
+          filter: string | null
           id: string
+          music_path: string | null
+          music_title: string | null
+          mute_original: boolean
           platform: string
           thumbnail_url: string | null
           title: string
@@ -923,7 +1221,11 @@ export type Database = {
           author_id: string
           created_at?: string
           duration_seconds?: number | null
+          filter?: string | null
           id?: string
+          music_path?: string | null
+          music_title?: string | null
+          mute_original?: boolean
           platform: string
           thumbnail_url?: string | null
           title: string
@@ -937,7 +1239,11 @@ export type Database = {
           author_id?: string
           created_at?: string
           duration_seconds?: number | null
+          filter?: string | null
           id?: string
+          music_path?: string | null
+          music_title?: string | null
+          mute_original?: boolean
           platform?: string
           thumbnail_url?: string | null
           title?: string
@@ -1035,6 +1341,21 @@ export type Database = {
           value: number
         }[]
       }
+      admin_list_reports: {
+        Args: { _limit?: number; _status?: string }
+        Returns: {
+          admin_note: string
+          created_at: string
+          details: string
+          id: string
+          reason: string
+          reporter_id: string
+          reporter_username: string
+          status: string
+          target_id: string
+          target_type: string
+        }[]
+      }
       admin_list_streams: {
         Args: { _limit?: number }
         Returns: {
@@ -1061,11 +1382,16 @@ export type Database = {
           id: string
           is_admin: boolean
           is_moderator: boolean
+          is_verified: boolean
           posts_count: number
           referrals_count: number
           username: string
           videos_count: number
         }[]
+      }
+      admin_review_report: {
+        Args: { _id: string; _note?: string; _status: string }
+        Returns: undefined
       }
       admin_set_role: {
         Args: {
@@ -1079,6 +1405,10 @@ export type Database = {
         Args: { _key: string; _value: string }
         Returns: undefined
       }
+      admin_set_verified: {
+        Args: { _user_id: string; _verified: boolean }
+        Returns: undefined
+      }
       admin_stats: { Args: never; Returns: Json }
       approve_recharge: {
         Args: { _note?: string; _request_id: string }
@@ -1089,7 +1419,17 @@ export type Database = {
         Returns: undefined
       }
       claim_referral: { Args: { _referrer_username: string }; Returns: string }
+      end_live_game: { Args: { _game_id: string }; Returns: string }
       end_live_stream: { Args: { _stream_id: string }; Returns: undefined }
+      get_live_game_answer: { Args: { _game_id: string }; Returns: string }
+      get_live_game_answers: {
+        Args: { _game_id: string }
+        Returns: {
+          answer: string
+          user_id: string
+        }[]
+      }
+      get_my_phone: { Args: never; Returns: string }
       get_referral_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
@@ -1153,10 +1493,34 @@ export type Database = {
         Args: { _count: number; _stream_id: string }
         Returns: undefined
       }
+      start_live_game: {
+        Args: {
+          _answer?: string
+          _kind: string
+          _prize_points?: number
+          _prompt?: string
+          _stream_id: string
+          _title: string
+        }
+        Returns: string
+      }
       start_live_stream: { Args: { _title: string }; Returns: string }
       storage_mime_allowed: {
         Args: { _kinds: string[]; _mimetype: string; _object_name: string }
         Returns: boolean
+      }
+      submit_live_game_score: {
+        Args: { _answer?: string; _game_id: string; _score: number }
+        Returns: undefined
+      }
+      submit_report: {
+        Args: {
+          _details?: string
+          _reason: string
+          _target_id: string
+          _target_type: string
+        }
+        Returns: string
       }
       submit_withdrawal: {
         Args: { _method: string; _points: number; _recipient_number: string }
@@ -1181,12 +1545,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1210,11 +1574,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1235,11 +1599,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1260,11 +1624,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1277,11 +1641,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

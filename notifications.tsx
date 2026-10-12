@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { kindIcon, type AppNotification } from "@/components/NotificationsBell";
+import { PushToggle } from "@/components/PushToggle";
 
 export const Route = createFileRoute("/notifications")({
   component: NotificationsPage,
@@ -60,8 +61,8 @@ function NotificationsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-4 flex items-center justify-between">
+      <main className="mx-auto w-full max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
+        <div className="mb-4 flex items-center justify-between px-4 sm:px-0">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-elegant">
               <Bell className="h-4 w-4 text-primary-foreground" />
@@ -101,14 +102,18 @@ function NotificationsPage() {
           </div>
         </div>
 
+        <div className="mb-4 px-4 sm:px-0">
+          <PushToggle className="w-full sm:w-auto" />
+        </div>
+
         {list.isLoading && <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}
         {list.data && list.data.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+          <div className="mx-4 rounded-2xl border border-dashed border-border p-10 text-center sm:mx-0">
             <p className="text-muted-foreground">لا توجد إشعارات بعد. ستظهر هنا كل تفاعلات الآخرين مع صفحتك.</p>
           </div>
         )}
 
-        <div className="space-y-2">
+        <div>
           {list.data?.map((n) => (
             <button
               key={n.id}
@@ -119,7 +124,7 @@ function NotificationsPage() {
                 }
                 if (n.link) navigate({ to: n.link });
               }}
-              className={`flex w-full items-start gap-3 rounded-2xl border border-border p-3 text-start transition hover:shadow-card ${n.read ? "bg-card" : "bg-primary/5"}`}
+              className={`flex w-full items-start gap-3 border-b border-border p-3 text-start transition hover:bg-accent sm:mx-0 sm:mb-2 sm:rounded-2xl sm:border sm:border-border sm:shadow-card ${n.read ? "bg-card sm:bg-card" : "bg-primary/5 sm:bg-primary/[0.03]"}`}
             >
               <span className="mt-0.5 shrink-0">{kindIcon(n.kind)}</span>
               <span className="min-w-0 flex-1">
