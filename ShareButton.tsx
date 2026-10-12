@@ -88,14 +88,27 @@ export function ShareButton({ postId, count, content }: { postId: string; count:
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm">
           <Share2 className="h-4 w-4" />
           {count > 0 && count}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      {open && (
+        <div
+          className="fixed inset-0 z-40"
+          onPointerDown={() => setOpen(false)}
+          onTouchStart={() => setOpen(false)}
+          aria-hidden
+        />
+      )}
+      <DropdownMenuContent
+        align="end"
+        className="z-50 w-56"
+        onPointerDownOutside={() => setOpen(false)}
+        onInteractOutside={() => setOpen(false)}
+      >
         <DropdownMenuItem onClick={handlers.profile}>
           <UserPlus className="h-4 w-4" /> مشاركة على صفحتي
         </DropdownMenuItem>

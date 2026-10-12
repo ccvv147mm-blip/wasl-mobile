@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,28 @@ export function Header() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  // Hide the top bar when scrolling down, bring it back when scrolling up
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY.current;
+      lastY.current = y;
+      if (Math.abs(delta) < 6) return;
+      if (y < 80) {
+        setHidden(false);
+      } else if (delta > 0) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const unread = useQuery({
     enabled: !!user,
@@ -38,7 +60,11 @@ export function Header() {
   });
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-card/85 backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-40 w-full border-b border-border bg-card/85 backdrop-blur-md transition-transform duration-300 ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      }`}
+    >
       <div className="mx-auto flex max-w-5xl flex-col gap-2 px-3 py-3">
       <div className="flex items-center gap-3">
         <Link to="/" className="group flex shrink-0 items-center gap-2">

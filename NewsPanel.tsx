@@ -25,6 +25,15 @@ export function NewsPanel() {
   const newsFn = useServerFn(getCountryNews);
 
   useEffect(() => {
+    const s = localStorage.getItem("home-news-open");
+    if (s !== null) setOpen(s === "1");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("home-news-open", open ? "1" : "0");
+  }, [open]);
+
+  useEffect(() => {
     if (!user) return;
     void (async () => {
       const { data: p } = await supabase.from("profiles").select("country").eq("id", user.id).single();
@@ -47,11 +56,14 @@ export function NewsPanel() {
     queryKey: ["news", country, today],
     staleTime: 1000 * 60 * 60 * 6,
     gcTime: 1000 * 60 * 60 * 24,
-    refetchOnMount: "always",
+    retry: 1,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     queryFn: async () => newsFn({ data: { country: country! } }),
   });
 
   if (!country) return null;
+
 
   const dateLabel = news.data?.dateLabel ?? new Intl.DateTimeFormat("ar-EG", {
     weekday: "long",
@@ -88,10 +100,15 @@ export function NewsPanel() {
                 {news.isFetching ? <Loader2 className="h-3 w-3 animate-spin" /> : "تحديث"}
               </Button>
             </div>
-            {news.isLoading && (
+            {news.isFetching && (news.data?.items ?? []).length === 0 && (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
+            )}
+            {!news.isFetching && (news.data?.items ?? []).length === 0 && (
+              <p className="py-3 text-center text-xs text-muted-foreground">
+                {news.data?.error ?? (news.error instanceof Error ? news.error.message : "لا توجد أخبار متاحة الآن، جرّب التحديث.")}
+              </p>
             )}
             <ul className="space-y-2">
               {(news.data?.items ?? []).map((item, i) => (
@@ -104,6 +121,7 @@ export function NewsPanel() {
                 </li>
               ))}
             </ul>
+
           </div>
         </div>
       </div>

@@ -89,9 +89,13 @@ export function PostComposer() {
     if (!content.trim()) return toast.error("اكتب نصاً أولاً");
     setAiLoading(true);
     try {
-      const { result } = await improveFn({ data: { text: content, mode } });
-      setContent(result);
-      toast.success("تم بالذكاء الاصطناعي");
+      const { result, error } = await improveFn({ data: { text: content, mode } });
+      if (error) {
+        toast.error(error);
+      } else {
+        setContent(result);
+        toast.success("تم بالذكاء الاصطناعي");
+      }
     } catch (e) {
       toast.error(friendlyError(e, "تعذّر تنفيذ الطلب"));
     } finally {

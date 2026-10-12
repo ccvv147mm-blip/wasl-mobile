@@ -4,6 +4,8 @@ import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { reportError } from "@/lib/diagnostics.functions";
 import { useAuth } from "@/lib/auth-context";
+import { isAbortError } from "@/lib/abort-error";
+import { classifyError, isSelfHealEnabled, tryAutoHeal } from "@/lib/self-heal";
 
 /**
  * يلتقط أخطاء JS غير الممسوكة + رفض الـ Promise، يحفظها ويطلب تشخيصاً من الذكاء الاصطناعي.
@@ -24,6 +26,17 @@ export function ErrorCatcher() {
       if (lastSig.current && lastSig.current.sig === sig && now - lastSig.current.at < 15000) return;
       lastSig.current = { sig, at: now };
 
+      // 1) محاولة إصلاح ذاتي فورية قبل أي شيء
+      let healed: string | null = null;
+      if (isSelfHealEnabled()) {
+        try {
+          healed = await tryAutoHeal(classifyError(message));
+        } catch {
+          /* ignore */
+        }
+        if (healed) toast.success("الإصلاح الذاتي", { description: healed, duration: 7000 });
+      }
+
       try {
         const route =
           router.state.location.pathname + (router.state.location.search ? `?${new URLSearchParams(router.state.location.search as any).toString()}` : "");
@@ -35,7 +48,7 @@ export function ErrorCatcher() {
             user_agent: navigator.userAgent.slice(0, 480),
           },
         });
-        if (res?.suggestion) {
+        if (!healed && res?.suggestion) {
           toast.error("حدث خطأ", {
             description: `${res.diagnosis ? res.diagnosis + " — " : ""}${res.suggestion}`,
             duration: 8000,
@@ -48,11 +61,16 @@ export function ErrorCatcher() {
 
     const onError = (ev: ErrorEvent) => {
       if (!ev.message) return;
+      if (isAbortError(ev.error) || isAbortError(ev.message)) return;
       void send(ev.message, ev.error?.stack);
     };
     const onRejection = (ev: PromiseRejectionEvent) => {
       const reason: any = ev.reason;
       const msg = typeof reason === "string" ? reason : reason?.message ?? "Unhandled promise rejection";
+      if (isAbortError(reason) || isAbortError(msg)) {
+        ev.preventDefault();
+        return;
+      }
       void send(String(msg), reason?.stack);
     };
 

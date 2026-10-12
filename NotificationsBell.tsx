@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PushToggle } from "@/components/PushToggle";
 
 export type AppNotification = {
   id: string;
@@ -178,7 +179,8 @@ export function NotificationsBell() {
             </button>
           ))}
         </div>
-        <div className="border-t border-border p-2">
+        <div className="space-y-2 border-t border-border p-2">
+          <PushToggle className="w-full" />
           <Button asChild variant="outline" size="sm" className="w-full">
             <Link to="/notifications">عرض كل الإشعارات</Link>
           </Button>
