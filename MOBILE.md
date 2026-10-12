@@ -1,7 +1,7 @@
 # دليل رفع تطبيق "وَصْل" على Google Play و App Store
 
 التطبيق مُجهّز بـ Capacitor (`capacitor.config.ts`) ويحمّل الموقع المنشور
-`https://arab-spark-ai.lovable.app` داخل تطبيق أصلي (Android / iOS).
+`https://www.arabsparkcommunity.app` داخل تطبيق أصلي (Android / iOS).
 
 ## 1) التجهيز مرة واحدة (على جهازك)
 
@@ -38,8 +38,8 @@ npx cap open ios
 - المعرّف (Package / Bundle ID): `app.lovable.arabsparkai`
 - الفئة: التواصل الاجتماعي
 - الوصف القصير: شبكة اجتماعية عربية للمنشورات والفيديو والمتجر والمحادثات.
-- سياسة الخصوصية: `https://arab-spark-ai.lovable.app/privacy`
-- شروط الاستخدام: `https://arab-spark-ai.lovable.app/terms`
+- سياسة الخصوصية: `https://www.arabsparkcommunity.app/privacy`
+- شروط الاستخدام: `https://www.arabsparkcommunity.app/terms`
 - الأيقونات: `public/icon-512.png` و`public/icon-192.png`
 - الحد الأدنى للعمر: 13+ (يحتوي محتوى من المستخدمين)
 - مطلوب في Play Console: نموذج "أمان البيانات" (Data safety) — التطبيق يجمع

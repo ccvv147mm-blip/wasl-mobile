@@ -28,9 +28,10 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VideosRouteImport } from './routes/videos'
 import { Route as WalletRouteImport } from './routes/wallet'
-import { Route as DotwellKnownAssetlinksDotjsonRouteImport } from './routes/[.]well-known.assetlinks[.]json'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminRechargesRouteImport } from './routes/admin.recharges'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminWithdrawalsRouteImport } from './routes/admin.withdrawals'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId'
@@ -38,6 +39,8 @@ import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index
 import { Route as MarketplaceListingIdRouteImport } from './routes/marketplace.$listingId'
 import { Route as MarketplaceMyRouteImport } from './routes/marketplace.my'
 import { Route as MarketplaceNewRouteImport } from './routes/marketplace.new'
+import { Route as PostPostIdRouteImport } from './routes/post.$postId'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -134,12 +137,6 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DotwellKnownAssetlinksDotjsonRoute =
-  DotwellKnownAssetlinksDotjsonRouteImport.update({
-    id: '/.well-known/assetlinks.json',
-    path: '/.well-known/assetlinks.json',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -148,6 +145,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminRechargesRoute = AdminRechargesRouteImport.update({
   id: '/admin/recharges',
   path: '/admin/recharges',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWithdrawalsRoute = AdminWithdrawalsRouteImport.update({
+  id: '/admin/withdrawals',
+  path: '/admin/withdrawals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -185,6 +192,16 @@ const MarketplaceNewRoute = MarketplaceNewRouteImport.update({
   path: '/new',
   getParentRoute: () => MarketplaceRoute,
 } as any)
+const PostPostIdRoute = PostPostIdRouteImport.update({
+  id: '/post/$postId',
+  path: '/post/$postId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push-dispatch',
+  path: '/api/public/push-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -206,16 +223,19 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/videos': typeof VideosRoute
   '/wallet': typeof WalletRoute
-  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/admin/recharges': typeof AdminRechargesRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/api/tts': typeof ApiTtsRoute
   '/live/$streamId': typeof LiveStreamIdRoute
   '/marketplace/$listingId': typeof MarketplaceListingIdRoute
   '/marketplace/my': typeof MarketplaceMyRoute
   '/marketplace/new': typeof MarketplaceNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/admin/': typeof AdminIndexRoute
   '/live/': typeof LiveIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,16 +256,19 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/videos': typeof VideosRoute
   '/wallet': typeof WalletRoute
-  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/admin/recharges': typeof AdminRechargesRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/api/tts': typeof ApiTtsRoute
   '/live/$streamId': typeof LiveStreamIdRoute
   '/marketplace/$listingId': typeof MarketplaceListingIdRoute
   '/marketplace/my': typeof MarketplaceMyRoute
   '/marketplace/new': typeof MarketplaceNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/admin': typeof AdminIndexRoute
   '/live': typeof LiveIndexRoute
   '/marketplace': typeof MarketplaceIndexRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,16 +291,19 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/videos': typeof VideosRoute
   '/wallet': typeof WalletRoute
-  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/admin/recharges': typeof AdminRechargesRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/withdrawals': typeof AdminWithdrawalsRoute
   '/api/tts': typeof ApiTtsRoute
   '/live/$streamId': typeof LiveStreamIdRoute
   '/marketplace/$listingId': typeof MarketplaceListingIdRoute
   '/marketplace/my': typeof MarketplaceMyRoute
   '/marketplace/new': typeof MarketplaceNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/admin/': typeof AdminIndexRoute
   '/live/': typeof LiveIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -301,16 +327,19 @@ export interface FileRouteTypes {
     | '/terms'
     | '/videos'
     | '/wallet'
-    | '/.well-known/assetlinks.json'
     | '/admin/recharges'
+    | '/admin/reports'
+    | '/admin/withdrawals'
     | '/api/tts'
     | '/live/$streamId'
     | '/marketplace/$listingId'
     | '/marketplace/my'
     | '/marketplace/new'
+    | '/post/$postId'
     | '/admin/'
     | '/live/'
     | '/marketplace/'
+    | '/api/public/push-dispatch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -331,16 +360,19 @@ export interface FileRouteTypes {
     | '/terms'
     | '/videos'
     | '/wallet'
-    | '/.well-known/assetlinks.json'
     | '/admin/recharges'
+    | '/admin/reports'
+    | '/admin/withdrawals'
     | '/api/tts'
     | '/live/$streamId'
     | '/marketplace/$listingId'
     | '/marketplace/my'
     | '/marketplace/new'
+    | '/post/$postId'
     | '/admin'
     | '/live'
     | '/marketplace'
+    | '/api/public/push-dispatch'
   id:
     | '__root__'
     | '/'
@@ -362,16 +394,19 @@ export interface FileRouteTypes {
     | '/terms'
     | '/videos'
     | '/wallet'
-    | '/.well-known/assetlinks.json'
     | '/admin/recharges'
+    | '/admin/reports'
+    | '/admin/withdrawals'
     | '/api/tts'
     | '/live/$streamId'
     | '/marketplace/$listingId'
     | '/marketplace/my'
     | '/marketplace/new'
+    | '/post/$postId'
     | '/admin/'
     | '/live/'
     | '/marketplace/'
+    | '/api/public/push-dispatch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -394,12 +429,15 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VideosRoute: typeof VideosRoute
   WalletRoute: typeof WalletRoute
-  DotwellKnownAssetlinksDotjsonRoute: typeof DotwellKnownAssetlinksDotjsonRoute
   AdminRechargesRoute: typeof AdminRechargesRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminWithdrawalsRoute: typeof AdminWithdrawalsRoute
   ApiTtsRoute: typeof ApiTtsRoute
   LiveStreamIdRoute: typeof LiveStreamIdRoute
+  PostPostIdRoute: typeof PostPostIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   LiveIndexRoute: typeof LiveIndexRoute
+  ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -537,13 +575,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/assetlinks.json': {
-      id: '/.well-known/assetlinks.json'
-      path: '/.well-known/assetlinks.json'
-      fullPath: '/.well-known/assetlinks.json'
-      preLoaderRoute: typeof DotwellKnownAssetlinksDotjsonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -556,6 +587,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/recharges'
       fullPath: '/admin/recharges'
       preLoaderRoute: typeof AdminRechargesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/withdrawals': {
+      id: '/admin/withdrawals'
+      path: '/admin/withdrawals'
+      fullPath: '/admin/withdrawals'
+      preLoaderRoute: typeof AdminWithdrawalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -607,6 +652,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceNewRouteImport
       parentRoute: typeof MarketplaceRoute
     }
+    '/post/$postId': {
+      id: '/post/$postId'
+      path: '/post/$postId'
+      fullPath: '/post/$postId'
+      preLoaderRoute: typeof PostPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push-dispatch': {
+      id: '/api/public/push-dispatch'
+      path: '/api/public/push-dispatch'
+      fullPath: '/api/public/push-dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -648,13 +707,26 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VideosRoute: VideosRoute,
   WalletRoute: WalletRoute,
-  DotwellKnownAssetlinksDotjsonRoute: DotwellKnownAssetlinksDotjsonRoute,
   AdminRechargesRoute: AdminRechargesRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminWithdrawalsRoute: AdminWithdrawalsRoute,
   ApiTtsRoute: ApiTtsRoute,
   LiveStreamIdRoute: LiveStreamIdRoute,
+  PostPostIdRoute: PostPostIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   LiveIndexRoute: LiveIndexRoute,
+  ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
