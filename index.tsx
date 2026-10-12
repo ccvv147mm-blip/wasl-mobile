@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "./tanstack/react-start";
 import { supabase } from "@integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "./lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PostComposer } from "@/components/PostComposer";
