@@ -1,12 +1,18 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>وَصْلُ – Receipt</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
-</html>
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  root: './',
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+      'src': path.resolve(__dirname, './'),
+      '/src': path.resolve(__dirname, './'),
+    },
+  },
+  build: {
+    outDir: 'dist',
+  },
+});
