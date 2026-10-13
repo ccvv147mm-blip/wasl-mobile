@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from './client';
 import { useAuth } from './auth-context';
 import { Button } from './button';
-import { Header } from './header';
+import { Header } from './headerts'; 
 import { PostComposer } from './PostComposer';
 import { NewsPanel } from './NewsPanel';
 import { StoriesBar } from './StoriesBar';
