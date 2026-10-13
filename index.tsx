@@ -12,8 +12,8 @@ import { StoriesBar } from "@/components/StoriesBar";
 import { PostCard, type FeedPost } from "@/components/PostCard";
 import { Sparkles, Brain, Users, Heart, Loader2, Clock, Store, Video, ChevronDown, ChevronUp } from "lucide-react";
 import { rankFeed } from "@/lib/ai.functions";
-import { friendlyError } from "@/lib/friendly-error";
-import { toast } from "sonner";
+import { rankFeed } from 'ai.functions';
+import { friendlyError } from 'friendly-error';
 
 export const Route = createFileRoute("/")({
   component: HomePage,
