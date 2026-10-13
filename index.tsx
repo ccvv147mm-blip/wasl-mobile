@@ -11,7 +11,6 @@ import { NewsPanel } from "@/components/NewsPanel";
 import { StoriesBar } from "@/components/StoriesBar";
 import { PostCard, type FeedPost } from "@/components/PostCard";
 import { Sparkles, Brain, Users, Heart, Loader2, Clock, Store, Video, ChevronDown, ChevronUp } from "lucide-react";
-import { rankFeed } from "@/lib/ai.functions";
 import { rankFeed } from 'ai.functions';
 import { friendlyError } from 'friendly-error';
 
