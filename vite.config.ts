@@ -11,7 +11,10 @@ export default defineConfig({
       '@/components': path.resolve(__dirname, './'),
       '@/lib': path.resolve(__dirname, './'),
       '@/integrations': path.resolve(__dirname, './'),
+      // توجيه أي استيراد للمجلدات العميقة مباشرة إلى الملفات الموجودة في الجذر
+      'integrations/supabase/client': path.resolve(__dirname, './client.ts'),
       './integrations/supabase/client': path.resolve(__dirname, './client.ts'),
+      '../integrations/supabase/client': path.resolve(__dirname, './client.ts'),
     },
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json'],
   },
