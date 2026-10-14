@@ -11,6 +11,7 @@ export default defineConfig({
       '@/components': path.resolve(__dirname, './'),
       '@/lib': path.resolve(__dirname, './'),
       '@/integrations': path.resolve(__dirname, './'),
+      './integrations/supabase/client': path.resolve(__dirname, './client.ts'),
     },
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json'],
   },
