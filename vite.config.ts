@@ -8,15 +8,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
-      'src': path.resolve(__dirname, './'),
-      '/src': path.resolve(__dirname, './'),
-      'components': path.resolve(__dirname, './components'),
-      'integrations': path.resolve(__dirname, './'),
-      '@/integrations/supabase/client': path.resolve(__dirname, './client.ts')
+      '@/components': path.resolve(__dirname, './'),
+      '@/lib': path.resolve(__dirname, './'),
+      '@/integrations': path.resolve(__dirname, './'),
     },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+    extensions: ['.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   build: {
     outDir: 'dist',
-  }
+  },
 });
